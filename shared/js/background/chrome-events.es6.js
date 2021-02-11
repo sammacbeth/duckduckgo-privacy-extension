@@ -4,6 +4,7 @@
  * on FF, we might actually miss the onInstalled event
  * if we do too much before adding it
  */
+const tldts = require('tldts')
 const ATB = require('./atb.es6')
 const utils = require('./utils.es6')
 const trackerutils = require('./tracker-utils')
@@ -238,11 +239,21 @@ chrome.runtime.onMessage.addListener((req, sender, res) => {
             if (req.checkThirdParty) {
                 const action = {
                     isThirdParty: false,
-                    shouldBlock: false
+                    shouldBlock: false,
+                    tabRegisteredDomain: tldts.parse(sender.tab.url).hostname,
+                    policy: {
+                        threshold: 604800,
+                        maxAge: 604800
+                    }
                 }
                 const tab = tabManager.get({ tabId: sender.tab.id })
                 if (tab && tab.site.whitelisted) {
                     res(action)
+                    return true
+                }
+                if (tab) {
+                    const parsed = tldts.parse(tab.url)
+                    action.tabRegisteredDomain = parsed.isIp ? parsed.hostname : parsed.domain
                 }
 
                 if (!utils.isFirstParty(sender.url, sender.tab.url)) {
