@@ -123,8 +123,8 @@
     chrome.runtime.sendMessage({
         'checkThirdParty': true
     }, function (action) {
-        if (action.shouldBlock) {
-            // overrides expiry policy with blocking
+        if (window.top !== window && action.shouldBlock) {
+            // overrides expiry policy with blocking - only in subframes
             inject(clearInjectedCookiesAndBlock)
         }
         // inform the injected script of the policy for this frame
