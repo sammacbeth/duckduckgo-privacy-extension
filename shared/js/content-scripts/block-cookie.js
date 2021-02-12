@@ -139,6 +139,6 @@
         window.postMessage({
             source: MSG_SECRET,
             ...action
-        })
+        }, document.location.origin)
     })
 })()
