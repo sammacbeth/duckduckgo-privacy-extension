@@ -33,6 +33,7 @@
      * @param {string} secret Used to detect messages sent from the extension content-script
      */
     function applyCookieExpiryPolicy (secret) {
+        const debug = false
         const cookieSetter = document.__lookupSetter__('cookie')
         const cookieGetter = document.__lookupGetter__('cookie')
         const lineTest = /(\()?(http[^)]+):[0-9]+:[0-9]+(\))?/
@@ -47,7 +48,6 @@
             }
             window.addEventListener('message', messageListener)
         })
-        console.log('inject cookie test', cookieSetter, secret)
         document.__defineSetter__('cookie', (value) => {
             // call the native document.cookie implementation. This will set the cookie immediately
             // if the value is valid. We will override this set later if the policy dictates that
@@ -55,19 +55,26 @@
             cookieSetter.apply(document, [value])
             try {
                 // determine the origins of the scripts in the stack
-                const scriptOrigins = (new Error().stack.split('\n')).reduce((origins, line) => {
+                const stack = new Error().stack.split('\n')
+                const scriptOrigins = stack.reduce((origins, line) => {
                     const res = line.match(lineTest)
                     if (res && res[2]) {
-                        origins.add(new URL(res[2]).hostname)
+                        origins.push(new URL(res[2]).hostname)
                     }
                     return origins
-                }, new Set())
+                }, [])
+
                 // wait for config before doing same-site tests
                 loadPolicy.then(({ tabRegisteredDomain, policy }) => {
-                    const sameSiteScript = [...scriptOrigins].every((host) => host === tabRegisteredDomain || host.endsWith(`.${tabRegisteredDomain}`))
+                    if (!tabRegisteredDomain) {
+                        // no site domain for this site to test against, abort
+                        debug && console.log('cookie policy disabled on this page')
+                        return
+                    }
+                    const sameSiteScript = scriptOrigins.every((host) => host === tabRegisteredDomain || host.endsWith(`.${tabRegisteredDomain}`))
                     if (sameSiteScript) {
                         // cookies set by scripts loaded on the same site as the site are not modified
-                        console.log('ignored', value, scriptOrigins)
+                        debug && console.log('ignored', value, scriptOrigins)
                         return
                     }
                     // extract cookie expiry from cookie string
@@ -88,12 +95,13 @@
                         } else {
                             cookieParts.splice(maxAgeIdx, 1, `max-age=${policy.maxAge}`)
                         }
-                        console.log('update cookie', cookieParts.join(';'), scriptOrigins)
+                        debug && console.log('update cookie', cookieParts.join(';'), scriptOrigins)
                         cookieSetter.apply(document, [cookieParts.join(';')])
                     }
                 })
             } catch (e) {
-                console.warn('error in cookie override', e)
+                // suppress error in cookie override to avoid breakage
+                debug && console.warn('Error in cookie override', e)
             }
         })
         document.__defineGetter__('cookie', cookieGetter)

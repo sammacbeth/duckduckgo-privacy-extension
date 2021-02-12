@@ -231,31 +231,30 @@ chrome.runtime.onMessage.addListener((req, sender, res) => {
         return true
     }
 
-    const activeExperiment = settings.getSetting('activeExperiment')
-    if (activeExperiment) {
-        const experiment = settings.getSetting('experimentData')
-
-        if (experiment && experiment.blockingActivated) {
-            if (req.checkThirdParty) {
-                const action = {
-                    isThirdParty: false,
-                    shouldBlock: false,
-                    tabRegisteredDomain: tldts.parse(sender.tab.url).hostname,
-                    policy: {
-                        threshold: 604800,
-                        maxAge: 604800
-                    }
-                }
+    if (req.checkThirdParty) {
+        const activeExperiment = settings.getSetting('activeExperiment')
+        const action = {
+            isThirdParty: false,
+            shouldBlock: false,
+            tabRegisteredDomain: null,
+            policy: {
+                threshold: 1468800, // 17 days
+                maxAge: 604800 // 7 days
+            }
+        }
+        if (activeExperiment) {
+            const experiment = settings.getSetting('experimentData')
+            if (experiment && experiment.blockingActivated) {
                 const tab = tabManager.get({ tabId: sender.tab.id })
+                // determine the register domain of the sending tab
+                const tabUrl = tab ? tab.url : sender.tab.url
+                const parsed = tldts.parse(tabUrl)
+                action.tabRegisteredDomain = parsed.isIp ? parsed.hostname : parsed.domain || parsed.hostname
+
                 if (tab && tab.site.whitelisted) {
                     res(action)
                     return true
                 }
-                if (tab) {
-                    const parsed = tldts.parse(tab.url)
-                    action.tabRegisteredDomain = parsed.isIp ? parsed.hostname : parsed.domain
-                }
-
                 if (!utils.isFirstParty(sender.url, sender.tab.url)) {
                     action.isThirdParty = true
                 }
@@ -267,7 +266,7 @@ chrome.runtime.onMessage.addListener((req, sender, res) => {
                 return true
             }
         } else {
-            res({ isThirdParty: false, shouldBlock: false })
+            res(action)
             return true
         }
     }
