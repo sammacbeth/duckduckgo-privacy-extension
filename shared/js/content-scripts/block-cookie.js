@@ -68,13 +68,13 @@
                 loadPolicy.then(({ tabRegisteredDomain, policy }) => {
                     if (!tabRegisteredDomain) {
                         // no site domain for this site to test against, abort
-                        debug && console.log('cookie policy disabled on this page')
+                        debug && console.log('[ddg-cookie-policy] policy disabled on this page')
                         return
                     }
                     const sameSiteScript = scriptOrigins.every((host) => host === tabRegisteredDomain || host.endsWith(`.${tabRegisteredDomain}`))
                     if (sameSiteScript) {
                         // cookies set by scripts loaded on the same site as the site are not modified
-                        debug && console.log('ignored', value, scriptOrigins)
+                        debug && console.log('[ddg-cookie-policy] ignored (sameSite)', value, scriptOrigins)
                         return
                     }
                     // extract cookie expiry from cookie string
@@ -95,8 +95,10 @@
                         } else {
                             cookieParts.splice(maxAgeIdx, 1, `max-age=${policy.maxAge}`)
                         }
-                        debug && console.log('update cookie', cookieParts.join(';'), scriptOrigins)
+                        debug && console.log('[ddg-cookie-policy] update', cookieParts.join(';'), scriptOrigins)
                         cookieSetter.apply(document, [cookieParts.join(';')])
+                    } else {
+                        debug && console.log('[ddg-cookie-policy] ignored (expiry)', value, scriptOrigins)
                     }
                 })
             } catch (e) {
