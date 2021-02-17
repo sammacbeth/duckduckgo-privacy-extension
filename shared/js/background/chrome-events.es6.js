@@ -261,7 +261,7 @@ chrome.runtime.onMessage.addListener((req, sender, res) => {
             tabRegisteredDomain: null,
             isTrackerFrame: false,
             policy: {
-                threshold: 1468800, // 17 days
+                threshold: 604800, // 7 days
                 maxAge: 604800 // 7 days
             }
         }
