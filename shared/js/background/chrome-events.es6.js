@@ -50,6 +50,28 @@ chrome.webRequest.onBeforeRequest.addListener(
     ['blocking']
 )
 
+/**
+ * Listen for script loads from trackers and relay the hosts to the frame's content-script.
+ * This will be used for tracker-dependant decicions in that context.
+ */
+chrome.webRequest.onBeforeRequest.addListener(
+    (details) => {
+        if (trackerutils.isTracker(details.url)) {
+            console.log('tracker script', details.url)
+            chrome.tabs.sendMessage(details.tabId, {
+                type: 'tracker',
+                hostname: tldts.parse(details.url).hostname
+            }, {
+                frameId: details.frameId
+            })
+        }
+    },
+    {
+        urls: ['<all_urls>'],
+        types: ['script']
+    }
+)
+
 const extraInfoSpec = ['blocking', 'responseHeaders']
 if (chrome.webRequest.OnHeadersReceivedOptions.EXTRA_HEADERS) {
     extraInfoSpec.push(chrome.webRequest.OnHeadersReceivedOptions.EXTRA_HEADERS)
@@ -237,6 +259,7 @@ chrome.runtime.onMessage.addListener((req, sender, res) => {
             isThirdParty: false,
             shouldBlock: false,
             tabRegisteredDomain: null,
+            isTrackerFrame: false,
             policy: {
                 threshold: 1468800, // 17 days
                 maxAge: 604800 // 7 days
@@ -250,6 +273,10 @@ chrome.runtime.onMessage.addListener((req, sender, res) => {
                 const tabUrl = tab ? tab.url : sender.tab.url
                 const parsed = tldts.parse(tabUrl)
                 action.tabRegisteredDomain = parsed.isIp ? parsed.hostname : parsed.domain || parsed.hostname
+
+                if (req.documentUrl && trackerutils.isTracker(req.documentUrl) && sender.frameId !== 0) {
+                    action.isTrackerFrame = true
+                }
 
                 if (tab && tab.site.whitelisted) {
                     res(action)

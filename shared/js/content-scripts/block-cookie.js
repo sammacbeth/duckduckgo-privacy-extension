@@ -39,11 +39,15 @@
         const lineTest = /(\()?(http[^)]+):[0-9]+:[0-9]+(\))?/
 
         // Listen for a message from the content script which will configure the policy for this context
+        const trackerHosts = new Set()
         const loadPolicy = new Promise((resolve) => {
             const messageListener = (event) => {
                 if (event && event.isTrusted && event.data && event.data.source === secret) {
-                    resolve(event.data)
-                    window.removeEventListener('message', messageListener)
+                    if (event.data.type === 'tracker') {
+                        trackerHosts.add(event.data.hostname)
+                    } else {
+                        resolve(event.data)
+                    }
                 }
             }
             window.addEventListener('message', messageListener)
@@ -59,22 +63,27 @@
                 const scriptOrigins = stack.reduce((origins, line) => {
                     const res = line.match(lineTest)
                     if (res && res[2]) {
-                        origins.push(new URL(res[2]).hostname)
+                        origins.add(new URL(res[2]).hostname)
                     }
                     return origins
-                }, [])
+                }, new Set())
 
                 // wait for config before doing same-site tests
-                loadPolicy.then(({ tabRegisteredDomain, policy }) => {
+                loadPolicy.then(({ tabRegisteredDomain, policy, isTrackerFrame }) => {
                     if (!tabRegisteredDomain) {
                         // no site domain for this site to test against, abort
                         debug && console.log('[ddg-cookie-policy] policy disabled on this page')
                         return
                     }
-                    const sameSiteScript = scriptOrigins.every((host) => host === tabRegisteredDomain || host.endsWith(`.${tabRegisteredDomain}`))
+                    const sameSiteScript = [...scriptOrigins].every((host) => host === tabRegisteredDomain || host.endsWith(`.${tabRegisteredDomain}`))
                     if (sameSiteScript) {
                         // cookies set by scripts loaded on the same site as the site are not modified
-                        debug && console.log('[ddg-cookie-policy] ignored (sameSite)', value, scriptOrigins)
+                        debug && console.log('[ddg-cookie-policy] ignored (sameSite)', value, [...scriptOrigins])
+                        return
+                    }
+                    const trackerScript = [...scriptOrigins].some((host) => trackerHosts.has(host))
+                    if (!trackerScript && !isTrackerFrame) {
+                        debug && console.log('[ddg-cookie-policy] ignored (non-tracker)', value, [...scriptOrigins])
                         return
                     }
                     // extract cookie expiry from cookie string
@@ -131,7 +140,8 @@
     inject(applyCookieExpiryPolicy, MSG_SECRET)
 
     chrome.runtime.sendMessage({
-        'checkThirdParty': true
+        'checkThirdParty': true,
+        documentUrl: window.location.href
     }, function (action) {
         if (window.top !== window && action.shouldBlock) {
             // overrides expiry policy with blocking - only in subframes
@@ -142,5 +152,11 @@
             source: MSG_SECRET,
             ...action
         }, document.location.origin)
+    })
+    chrome.runtime.onMessage.addListener((message) => {
+        window.postMessage({
+            source: MSG_SECRET,
+            ...message
+        })
     })
 })()
