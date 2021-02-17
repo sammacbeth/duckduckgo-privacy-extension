@@ -69,8 +69,8 @@
                 }, new Set())
 
                 // wait for config before doing same-site tests
-                loadPolicy.then(({ tabRegisteredDomain, policy, isTrackerFrame }) => {
-                    if (!tabRegisteredDomain) {
+                loadPolicy.then(({ shouldBlock, tabRegisteredDomain, policy, isTrackerFrame }) => {
+                    if (!tabRegisteredDomain || !shouldBlock) {
                         // no site domain for this site to test against, abort
                         debug && console.log('[ddg-cookie-policy] policy disabled on this page')
                         return
