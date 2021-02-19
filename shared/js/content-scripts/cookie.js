@@ -11,8 +11,13 @@ class Cookie {
             return NaN
         }
         const expiry = maxAgeIdx >= 0
-            ? parseInt(cookieParts[maxAgeIdx].split('=')[1])
-            : (new Date(cookieParts[expiresIdx].split('=')[1]) - new Date()) / 1000
+            ? parseInt(this.parts[maxAgeIdx].split('=')[1])
+            : (new Date(this.parts[expiresIdx].split('=')[1]) - new Date()) / 1000
         return expiry;
     }
+}
+
+// support node-requires (for test import)
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = Cookie
 }
