@@ -1,19 +1,52 @@
 class Cookie {
+
     constructor(cookieString) {
-        this.raw = cookieString
-        this.parts = this.raw.split(';')
+        this.parts = cookieString.split(';')
+        this.parse()
+    }
+
+    parse() {
+        const EXTRACT_ATTRIBUTES = new Set(['max-age', 'expires', 'domain']);
+        this.attrIdx = {}
+        this.parts.forEach((part, index) => {
+            const kv = part.split('=', 2)
+            const attribute = kv[0].trim()
+            const value = kv[1]
+            if (index === 0) {
+                this.name = attribute;
+                this.value = value;
+            } else if (EXTRACT_ATTRIBUTES.has(attribute.toLowerCase())) {
+                this[attribute] = value;
+                this.attrIdx[attribute.toLowerCase()] = index;
+            }
+        })
     }
 
     getExpiry() {
-        const maxAgeIdx = this.parts.findIndex(part => part.trim().toLowerCase().startsWith('max-age'))
-        const expiresIdx = this.parts.findIndex(part => part.trim().toLowerCase().startsWith('expires'))
-        if (maxAgeIdx === -1 && expiresIdx === -1) {
+        if (!this.maxAge && !this.expires) {
             return NaN
         }
-        const expiry = maxAgeIdx >= 0
-            ? parseInt(this.parts[maxAgeIdx].split('=')[1])
-            : (new Date(this.parts[expiresIdx].split('=')[1]) - new Date()) / 1000
+        const expiry = this.maxAge
+            ? parseInt(this.maxAge)
+            : (new Date(this.expires) - new Date()) / 1000
         return expiry;
+    }
+
+    get maxAge() {
+        return this['max-age']
+    }
+
+    set maxAge(value) {
+        if (this.attrIdx['max-age'] > 0) {
+            this.parts.splice(this.attrIdx['max-age'], 1, `max-age=${value}`)
+        } else {
+            this.parts.push(`max-age=${value}`)
+        }
+        this.parse()
+    }
+
+    toString() {
+        return this.parts.join(';')
     }
 }
 

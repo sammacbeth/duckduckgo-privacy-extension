@@ -87,25 +87,12 @@
                         return
                     }
                     // extract cookie expiry from cookie string
-                    const cookieParts = value.split(';')
-                    const maxAgeIdx = cookieParts.findIndex(part => part.trim().toLowerCase().startsWith('max-age'))
-                    const expiresIdx = cookieParts.findIndex(part => part.trim().toLowerCase().startsWith('expires'))
-                    if (maxAgeIdx === -1 && expiresIdx === -1) {
-                        // session cookie
-                        return
-                    }
-                    const expiry = maxAgeIdx >= 0
-                        ? parseInt(cookieParts[maxAgeIdx].split('=')[1])
-                        : (new Date(cookieParts[expiresIdx].split('=')[1]) - new Date()) / 1000
+                    const cookie = new Cookie(value)
                     // apply cookie policy
-                    if (expiry > policy.threshold) {
-                        if (maxAgeIdx === -1) {
-                            cookieParts.push(`max-age=${policy.maxAge}`)
-                        } else {
-                            cookieParts.splice(maxAgeIdx, 1, `max-age=${policy.maxAge}`)
-                        }
-                        debug && console.log('[ddg-cookie-policy] update', cookieParts.join(';'), scriptOrigins)
-                        cookieSetter.apply(document, [cookieParts.join(';')])
+                    if (cookie.getExpiry() > policy.threshold) {
+                        cookie.maxAge = policy.maxAge
+                        debug && console.log('[ddg-cookie-policy] update', cookie.toString(), scriptOrigins)
+                        cookieSetter.apply(document, [cookie.toString()])
                     } else {
                         debug && console.log('[ddg-cookie-policy] ignored (expiry)', value, scriptOrigins)
                     }
