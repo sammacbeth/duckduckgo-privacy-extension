@@ -123,8 +123,12 @@
      * @param {Function} func Function to run
      * @param {string} arg Optional argument to pass to the function
      */
-    function inject (func, arg) {
-        const scriptString = `(${func.toString()})('${arg}')`
+    function inject (func, arg, requires = []) {
+        const imports = requires.map(func => func.toString()).join(';\n')
+        const scriptString = `{
+            ${imports};
+            (${func.toString()})('${arg}')
+        }`
         const doc = window.wrappedJSObject ? window.wrappedJSObject.document : document
         const scriptElement = doc.createElement('script')
         scriptElement.innerHTML = scriptString
@@ -137,7 +141,7 @@
     const MSG_SECRET = `ddg-${Math.floor(Math.random() * 1000000)}`
     // The cookie expiry policy is injected into every frame immediately so that no cookie will
     // be missed.
-    inject(applyCookieExpiryPolicy, MSG_SECRET)
+    inject(applyCookieExpiryPolicy, MSG_SECRET, [Cookie])    
 
     chrome.runtime.sendMessage({
         'checkThirdParty': true,
