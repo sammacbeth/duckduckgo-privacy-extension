@@ -21,7 +21,7 @@ jobs:
     - name: Build extension
       run: npm run beta-firefox
     - name: Check version
-      run: echo "VERSION=$(date +%Y.%-m.%-d)" >> $GITHUB_ENV
+      run: echo "VERSION=$(jq -r .version ./build/firefox/release/manifest.json)" >> $GITHUB_ENV
     - name: Sign extension
       run: |
         web-ext sign -s ./build/firefox/release/ -a ./build/firefox/release/web-ext-artifacts --api-key ${{ secrets.AMO_JWT_ISSUER }} --api-secret ${{ secrets.AMO_JWT_SECRET }}
@@ -63,7 +63,7 @@ jobs:
     - name: Build extension
       run: npm run beta-chrome
     - name: Check version
-      run: echo "VERSION=$(date +%Y.%-m.%-d)" >> $GITHUB_ENV
+      run: echo "VERSION=$(jq -r .version ./build/chrome/release/manifest.json)" >> $GITHUB_ENV
     - name: Release
       uses: softprops/action-gh-release@v1
       env:
