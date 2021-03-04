@@ -1,0 +1,77 @@
+name: Publish Beta
+
+on:
+  push:
+    branches: [ devtools-beta ]
+
+jobs:
+  firefox:
+    runs-on: ubuntu-20.04
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Use Node.js 14
+      uses: actions/setup-node@v1
+      with:
+        node-version: 14.x
+    - name: Install dependencies
+      run: |
+        npm ci
+        npm i -g web-ext
+    - name: Build extension
+      run: npm run beta-firefox
+    - name: Check version
+      run: echo "VERSION=$(jq -r .version ./build/firefox/release/manifest.json)" >> $GITHUB_ENV
+    - name: Sign extension
+      run: |
+        web-ext sign -s ./build/firefox/release/ -a ./build/firefox/release/web-ext-artifacts --api-key ${{ secrets.AMO_JWT_ISSUER }} --api-secret ${{ secrets.AMO_JWT_SECRET }}
+    - name: Release
+      uses: softprops/action-gh-release@9729932bfb75c05ad1f6e3a729294e05abaa7001
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        prerelease: true
+        target_commitish: ${{ github.sha }}
+        tag_name: ${{ env.VERSION }}
+        files: |
+          ./build/firefox/release/web-ext-artifacts/*.xpi
+    - name: Checkout gh-pages
+      uses: actions/checkout@v2
+      with:
+        ref: 'gh-pages'
+        path: '_site'
+    - name: Prepare updates.json
+      run: |
+        echo $VERSION
+        node scripts/updater.js _site/updates.json $VERSION https://github.com/sammacbeth/duckduckgo-privacy-extension/releases/download/$VERSION/duckduckgo_privacy_essentials-$VERSION-an+fx.xpi
+    - name: Deploy updates.json
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./_site
+
+  chrome:
+    runs-on: ubuntu-20.04
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Use Node.js 14
+      uses: actions/setup-node@v1
+      with:
+        node-version: 14.x
+    - name: Install dependencies
+      run: npm ci
+    - name: Build extension
+      run: npm run beta-chrome
+    - name: Check version
+      run: echo "VERSION=$(jq -r .version ./build/chrome/release/manifest.json)" >> $GITHUB_ENV
+    - name: Release
+      uses: softprops/action-gh-release@9729932bfb75c05ad1f6e3a729294e05abaa7001
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        prerelease: true
+        target_commitish: ${{ github.sha }}
+        tag_name: ${{ env.VERSION }}
+        files: |
+          ./build/chrome/release/*.zip
