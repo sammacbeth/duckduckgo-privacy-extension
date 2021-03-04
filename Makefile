@@ -45,8 +45,10 @@ moveout: $(ITEMS)
 
 beta-firefox: release beta-firefox-zip
 
-prepare-firefox-beta:
-	cat ./browsers/firefox/manifest.json | node scripts/nightly-manifest.js > build/firefox/release/manifest.json
+prepare-beta-manifest:
+	cat ./browsers/$(browser)/manifest.json | node scripts/nightly-manifest.js $(browser) > build/$(browser)/release/manifest.json
 
-beta-firefox-zip: prepare-firefox-beta
+beta-firefox-zip: prepare-beta-manifest
 	cd build/firefox/release/ && web-ext build
+
+beta-chrome: release prepare-beta-manifest chrome-release-zip
