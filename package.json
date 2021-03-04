@@ -25,6 +25,7 @@
         "dev-safari": "make dev browser=duckduckgo.safariextension type=dev watch=1",
         "release-safari": "make dev browser=duckduckgo.safariextension type=release",
         "beta-firefox": "make beta-firefox browser=firefox type=release",
+        "beta-chrome": "make beta-chrome browser=chrome type=release",
         "release-chrome": "make browser=chrome type=release && make chrome-release-zip"
     },
     "devDependencies": {
