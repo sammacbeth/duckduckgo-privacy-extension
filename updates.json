@@ -1,7 +1,12 @@
 {
   "addons": {
     "firefox-beta@duckduckgo.com": {
-      "updates": []
+      "updates": [
+        {
+          "version": "2021.3.4",
+          "update_link": "https://github.com/sammacbeth/duckduckgo-privacy-extension/releases/download/2021.3.4/duckduckgo_privacy_essentials-2021.3.4-an+fx.xpi"
+        }
+      ]
     }
   }
 }
