@@ -2,7 +2,7 @@ name: Publish Beta
 
 on:
   release:
-    types: [ prereleased ]
+    types: [ created  ]
 
 jobs:
   firefox:
