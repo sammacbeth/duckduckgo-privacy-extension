@@ -15,16 +15,19 @@ describe(`On https://${testPageDomain}/privacy-protections/storage-blocking/`, (
         try {
             page.on('requestfinished', (req) => {
                 // once we see this url, we can consider the test completed
-                if (req.url().startsWith(`https://${thirdPartyTracker}/privacy-protections/storage-blocking/3rdparty.js`)) {
+                if (req.url().startsWith(`https://${thirdPartyTracker}/privacy-protections/storage-blocking/iframe.js`)) {
                     iframeFullyLoaded = true
                 }
             })
+            // Load the test pages home first to give some time for the extension background to start
+            // and register the content-script-message handler
+            await page.goto(`https://${testPageDomain}/`, { waitUntil: 'networkidle0' })
             await page.goto(`https://${testPageDomain}/privacy-protections/storage-blocking/?store`, { waitUntil: 'networkidle0' })
             // eslint-disable-next-line no-unmodified-loop-condition
             while (!iframeFullyLoaded) {
                 await wait.ms(100)
             }
-            await wait.ms(1000) // allow cookies to be set
+            await wait.ms(500) // allow cookies to be set
             // collect all browser cookies
             cookies = (await page._client.send('Network.getAllCookies')).cookies
         } finally {
