@@ -238,5 +238,6 @@ module.exports = {
     extractLimitedDomainFromURL,
     isBroken,
     getBrokenFeatures,
-    getBrokenCanvasScriptList
+    getBrokenCanvasScriptList,
+    isFirstParty
 }
