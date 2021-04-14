@@ -2,6 +2,7 @@ const tldts = require('tldts')
 
 const tabManager = require('./tab-manager.es6')
 const trackers = require('./trackers.es6')
+const tdsStorage = require('./storage/tds.es6')
 
 const ports = new Map()
 
@@ -15,15 +16,10 @@ function connected (port) {
         if (m.action === 'setTab') {
             tabId = m.tabId
             ports.set(tabId, port)
-            const tab = tabManager.get({ tabId: m.getTab })
-            console.log('xxx', tab)
-            // postMessage(tabId, `Tab ID: ${m.getTab}`)
-            // postMessage(tabId, `isBroken: ${tab.site.isBroken}`)
-            // postMessage(tabId, `Broken features: ${tab.site.brokenFeatures}`)
-            // postMessage(tabId, `Site is whitelisted?: ${tab.site.whitelisted}`)
+            const tab = tabManager.get({ tabId })
             postMessage(tabId, 'tabChange', tab)
         } else if (m.action === 'I' || m.action === 'B') {
-            const { requestData, siteUrl, tracker } = m;
+            const { requestData, siteUrl, tracker } = m
             const matchedTracker = trackers.getTrackerData(requestData.url, siteUrl, requestData)
             if (tracker.matchedRule) {
                 // find the rule for this url
@@ -43,12 +39,32 @@ function connected (port) {
                     }
                     rule.exceptions.domains.splice(index, 1)
                 }
-                console.log('add exception for ', matchedTracker);
+                console.log('add exception for ', matchedTracker)
             } else {
                 matchedTracker.tracker.default = m.action === 'I' ? 'ignore' : 'block'
             }
+        } else if (m.action === 'toggleProtection') {
+            const { tabId } = m
+            const tab = tabManager.get({ tabId })
+            tabManager.whitelistDomain({
+                list: 'whitelisted',
+                domain: tab.site.domain,
+                value: !tab.site.whitelisted
+            })
+            postMessage(tabId, 'tabChange', tab)
+        } else if (m.action === 'toggleCanvas' || m.action === 'toggleAudio') {
+            const { tabId } = m
+            const feature = m.action.slice(6).toLowerCase()
+            const tab = tabManager.get({ tabId })
+            const enabled = !tab.site?.brokenFeatures.includes(feature)
+            const excludedSites = tdsStorage.fingerprinting[feature].sites
+            const domain = tldts.getDomain(tab.site.domain)
+            if (enabled) {
+                excludedSites.push(domain)
+            } else {
+                excludedSites.splice(excludedSites.indexOf(domain), 1)
+            }
         }
-        console.log('xxx', m)
     })
     port.onDisconnect.addListener(() => {
         if (tabId !== -1) {

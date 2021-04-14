@@ -170,8 +170,7 @@
     }
 
     function isFeatureBroken (feature) {
-        return false;
-        // return args.site.brokenFeatures.includes(feature)
+        return args.site.brokenFeatures.includes(feature)
     }
 
     /**

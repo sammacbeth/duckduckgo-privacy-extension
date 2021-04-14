@@ -15,7 +15,7 @@
         table-layout: fixed;
         width: 100%;
         border-collapse: collapse;
-        border: 3px solid purple;
+        border: 1px solid black;
       }
 
       thead th:nth-child(1) {
@@ -27,11 +27,11 @@
       }
 
       thead th:nth-child(3) {
-        width: 10%;
+        width: 13%;
       }
 
       thead th:nth-child(4) {
-        width: 15%;
+        width: 12%;
       }
 
       thead th:nth-child(5) {
@@ -47,6 +47,7 @@
 
       th, td {
         padding: 5px;
+        white-space: nowrap;
       }
     </style>
   </head>
@@ -54,8 +55,10 @@
     <div class="header">
         <button id="clear">Clear</button>
         <button id="refresh">Refresh page</button>
-        <p id="protection-disabled">Protection disabled: ??</p>
-        <p id="broken-features">Broken features: ??</p>
+        <span>|</span>
+        <button id="protection">Protection: ??</button>
+        <button id="canvas">Canvas: ??</button>
+        <button id="audio">Audio: ??</button>
     </div>
     <table>
       <thead>
