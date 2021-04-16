@@ -9,6 +9,7 @@ const ATB = require('./atb.es6')
 const browserWrapper = require('./$BROWSER-wrapper.es6')
 const settings = require('./settings.es6')
 const webResourceURL = browserWrapper.getExtensionURL('/web_accessible_resources')
+const devtools = require('./devtools.es6')
 const browser = utils.getBrowserName()
 
 const debugRequest = false
@@ -102,6 +103,21 @@ function handleRequest (requestData) {
          */
 
         let tracker = trackers.getTrackerData(requestData.url, thisTab.site.url, requestData)
+        if (tracker) {
+            const cleanUrl = new URL(requestData.url)
+            cleanUrl.search = ''
+            cleanUrl.hash = ''
+            // console.log('xxx', tracker);
+            devtools.postMessage(tabId, 'tracker', {
+                tracker: {
+                    ...tracker,
+                    matchedRule: tracker.matchedRule?.rule.toString()
+                },
+                url: cleanUrl,
+                requestData,
+                siteUrl: thisTab.site.url
+            })
+        }
 
         // allow embedded twitter content if user enabled this setting
         if (tracker && tracker.fullTrackerDomain === 'platform.twitter.com' && settings.getSetting('embeddedTweetsEnabled') === true) {
@@ -127,7 +143,6 @@ function handleRequest (requestData) {
                 // record potential blocked trackers for this tab
                 thisTab.addToTrackers(tracker)
             }
-
             browserWrapper.notifyPopup({ updateTabData: true })
 
             // Block the request if the site is not whitelisted

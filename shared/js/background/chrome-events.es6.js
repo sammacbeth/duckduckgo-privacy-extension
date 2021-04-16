@@ -14,6 +14,7 @@ const settings = require('./settings.es6')
 const constants = require('../../data/constants')
 const onboarding = require('./onboarding.es6')
 const browser = utils.getBrowserName()
+const devtools = require('./devtools.es6')
 
 const sha1 = require('../shared-utils/sha1')
 
@@ -270,6 +271,7 @@ chrome.webNavigation.onCommitted.addListener(details => {
     if (!tab) return
 
     tab.updateSite(details.url)
+    devtools.postMessage(details.tabId, 'tabChange', tab)
 })
 
 /**
@@ -716,6 +718,8 @@ chrome.webRequest.onErrorOccurred.addListener(e => {
         }
     }
 }, { urls: ['<all_urls>'] })
+
+devtools.init()
 
 module.exports = {
     onStartup: onStartup

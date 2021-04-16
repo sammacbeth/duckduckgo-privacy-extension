@@ -29,7 +29,9 @@ module.exports = function (grunt) {
             '<%= dirs.public.js %>/base.js': ['<%= dirs.src.js %>/ui/base/index.es6.js'],
             '<%= dirs.public.js %>/popup.js': ['<%= dirs.src.js %>/ui/pages/popup.es6.js'],
             '<%= dirs.public.js %>/options.js': ['<%= dirs.src.js %>/ui/pages/options.es6.js'],
-            '<%= dirs.public.js %>/feedback.js': ['<%= dirs.src.js %>/ui/pages/feedback.es6.js']
+            '<%= dirs.public.js %>/feedback.js': ['<%= dirs.src.js %>/ui/pages/feedback.es6.js'],
+            '<%= dirs.public.js %>/devtools-page.js': ['<%= dirs.src.js %>/devtools/page.es6.js'],
+            '<%= dirs.public.js %>/devtools-panel.js': ['<%= dirs.src.js %>/devtools/panel.es6.js']
         },
         contentScope: {
             '<%= dirs.public.js %>/content-scope/fingerprint.js': ['<%= dirs.src.js %>/content-scope/fingerprint.es6.js']
@@ -62,7 +64,7 @@ module.exports = function (grunt) {
     /* watch any base files and browser specific files */
     let watch = {
         sass: ['<%= dirs.src.scss %>/**/*.scss'],
-        ui: ['<%= dirs.src.js %>/ui/**/*.es6.js', '<%= dirs.data %>/*.js'],
+        ui: ['<%= dirs.src.js %>/ui/**/*.es6.js', '<%= dirs.data %>/*.js', '<%= dirs.data %>/devtools/*.js'],
         background: ['<%= dirs.src.js %>/background/**/*.js', '<%= dirs.data %>/*.js'],
         contentScripts: ['<%= dirs.src.js %>/content-scripts/*.js'],
         injectedContentScripts: ['<%= dirs.src.js %>/injected-content-scripts/*.js'],
