@@ -56,6 +56,15 @@ chrome.runtime.onInstalled.addListener(function (details) {
     } else if (details.reason.match(/update/) && browserName === 'chrome') {
         experiment.setActiveExperiment()
     }
+
+    // Inject the email content script on all tabs upon installation (not needed on Firefox)
+    if (browserName !== 'moz') {
+        chrome.tabs.query({}, (tabs) => {
+            tabs.forEach(tab => {
+                chrome.tabs.executeScript(tab.id, { file: 'public/js/content-scripts/autofill.js' })
+            })
+        })
+    }
 })
 
 /**
@@ -166,17 +175,6 @@ function blockTrackingCookies () {
     return true
 }
 
-/**
- * Checks if a tracker is a first party by checking entity data
- * @param {string} trackerUrl
- * @param {string} siteUrl
- * @returns {boolean}
- */
-function isFirstPartyByEntity (trackerUrl, siteUrl, request) {
-    const trackerData = trackers.getTrackerData(trackerUrl, siteUrl, request)
-    return trackerData ? trackerData.firstParty : utils.isFirstParty(trackerUrl, siteUrl) // fall back on hostname check if trackers is null
-}
-
 // we determine if FLoC is enabled by testing for availability of its JS API
 const isFlocEnabled = ('interestCohort' in document)
 
@@ -239,10 +237,10 @@ chrome.webRequest.onHeadersReceived.addListener(
             if (tab && tab.site.whitelisted) return { responseHeaders }
             if (!tab) {
                 const initiator = request.initiator || request.documentUrl
-                if (utils.isFirstParty(initiator, request.url)) {
+                if (!initiator || trackerutils.isFirstPartyByEntity(initiator, request.url)) {
                     return { responseHeaders }
                 }
-            } else if (tab && isFirstPartyByEntity(request.url, tab.url, request)) {
+            } else if (tab && trackerutils.isFirstPartyByEntity(request.url, tab.url)) {
                 return { responseHeaders }
             }
             if (!cookieConfig.isExcluded(request.url)) {
@@ -317,14 +315,23 @@ chrome.omnibox.onInputEntered.addListener(function (text) {
  * MESSAGES
  */
 const browserWrapper = require('./chrome-wrapper.es6')
+const {
+    REFETCH_ALIAS_ALARM,
+    fetchAlias,
+    showContextMenuAction,
+    hideContextMenuAction,
+    getAddresses,
+    isValidUsername,
+    isValidToken
+} = require('./email-utils.es6')
 
 // handle any messages that come from content/UI scripts
 // returning `true` makes it possible to send back an async response
 chrome.runtime.onMessage.addListener((req, sender, res) => {
     if (sender.id !== chrome.runtime.id) return
 
-    if (req.registeredContentScript) {
-        const argumentsObject = getArgumentsObject(sender.tab.id)
+    if (req.registeredContentScript || req.registeredTempAutofillContentScript) {
+        const argumentsObject = getArgumentsObject(sender.tab.id, sender, req.documentUrl)
         if (!argumentsObject) {
             // No info for the tab available, do nothing.
             return
@@ -520,43 +527,77 @@ chrome.runtime.onMessage.addListener((req, sender, res) => {
         return true
     }
 
-    if (req.checkThirdParty) {
-        const action = {
-            isThirdParty: false,
-            shouldBlock: false,
-            tabRegisteredDomain: null,
-            isTrackerFrame: false,
-            policy: cookieConfig.firstPartyCookiePolicy
+    if (req.getAlias) {
+        const userData = settings.getSetting('userData')
+        res({ alias: userData?.nextAlias })
+
+        return true
+    }
+
+    if (req.getAddresses) {
+        res(getAddresses())
+
+        return true
+    }
+
+    if (req.refreshAlias) {
+        fetchAlias().then(() => {
+            res(getAddresses())
+        })
+
+        return true
+    }
+
+    if (req.addUserData) {
+        // Check the origin. Shouldn't be necessary, but better safe than sorry
+        if (!sender.url.match(/^https:\/\/(([a-z0-9-_]+?)\.)?duckduckgo\.com/)) return
+
+        const { userName, token } = req.addUserData
+        const { existingToken } = settings.getSetting('userData') || {}
+
+        // If the user is already registered, just notify tabs that we're ready
+        if (existingToken === token) {
+            chrome.tabs.query({}, (tabs) => {
+                tabs.forEach((tab) => {
+                    chrome.tabs.sendMessage(tab.id, { type: 'ddgUserReady' })
+                })
+            })
+            return
         }
-        if (chrome.runtime.lastError) { // Prevent thrown errors when the frame disappears
-            return true
-        }
-        if (blockTrackingCookies()) {
-            const tab = tabManager.get({ tabId: sender.tab.id })
-            // abort if site is whitelisted
-            if (tab && tab.site.whitelisted) {
-                res(action)
-                return true
-            }
 
-            // determine the register domain of the sending tab
-            const tabUrl = tab ? tab.url : sender.tab.url
-            const parsed = tldts.parse(tabUrl)
-            action.tabRegisteredDomain = parsed.domain === null ? parsed.hostname : parsed.domain
+        // Check general data validity
+        if (isValidUsername(userName) && isValidToken(token)) {
+            settings.updateSetting('userData', req.addUserData)
+            // Once user is set, fetch the alias and notify all tabs
+            fetchAlias().then(response => {
+                if (response && response.error) {
+                    return res({ error: response.error.message })
+                }
 
-            if (req.documentUrl && trackerutils.isTracker(req.documentUrl) && sender.frameId !== 0) {
-                action.isTrackerFrame = true
-            }
-
-            action.isThirdParty = !isFirstPartyByEntity(sender.url, sender.tab.url)
-            action.shouldBlock = !cookieConfig.isExcluded(sender.url)
-
-            res(action)
+                chrome.tabs.query({}, (tabs) => {
+                    tabs.forEach((tab) => {
+                        chrome.tabs.sendMessage(tab.id, { type: 'ddgUserReady' })
+                    })
+                })
+                showContextMenuAction()
+                res({ success: true })
+            })
         } else {
-            res(action)
+            res({ error: 'Something seems wrong with the user data' })
         }
 
         return true
+    }
+
+    if (req.logout) {
+        settings.updateSetting('userData', {})
+        // Broadcast the logout to all tabs
+        chrome.tabs.query({}, (tabs) => {
+            tabs.forEach((tab) => {
+                chrome.tabs.sendMessage(tab.id, { type: 'logout' })
+            })
+        })
+        hideContextMenuAction()
     }
 })
 
@@ -566,14 +607,39 @@ chrome.runtime.onMessage.addListener((req, sender, res) => {
 // TODO fix for manifest v3
 let sessionKey = getHash()
 
-function getArgumentsObject (tabId) {
+function getArgumentsObject (tabId, sender, documentUrl) {
     const tab = tabManager.get({ tabId })
     if (!tab) {
         return null
     }
+    if (chrome.runtime.lastError) { // Prevent thrown errors when the frame disappears
+        return null
+    }
     const site = tab?.site || {}
     const referrer = tab?.referrer || ''
+
+    const cookie = {
+        isThirdParty: false,
+        shouldBlock: false,
+        tabRegisteredDomain: null,
+        isTrackerFrame: false,
+        policy: cookieConfig.firstPartyCookiePolicy
+    }
+    if (!site.whitelisted && blockTrackingCookies()) {
+        // determine the register domain of the sending tab
+        const tabUrl = tab ? tab.url : sender.tab.url
+        const parsed = tldts.parse(tabUrl)
+        cookie.tabRegisteredDomain = parsed.domain === null ? parsed.hostname : parsed.domain
+
+        if (documentUrl && trackerutils.isTracker(documentUrl) && sender.frameId !== 0) {
+            cookie.isTrackerFrame = true
+        }
+
+        cookie.isThirdParty = !trackerutils.isFirstPartyByEntity(sender.url, sender.tab.url)
+        cookie.shouldBlock = !cookieConfig.isExcluded(sender.url)
+    }
     return {
+        cookie,
         globalPrivacyControlValue: settings.getSetting('GPC'),
         stringExemptionLists: utils.getBrokenScriptLists(),
         sessionKey,
@@ -678,10 +744,10 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
             if (tab && tab.site.whitelisted) return { requestHeaders }
             if (!tab) {
                 const initiator = request.initiator || request.documentUrl
-                if (utils.isFirstParty(initiator, request.url)) {
+                if (!initiator || trackerutils.isFirstPartyByEntity(initiator, request.url)) {
                     return { requestHeaders }
                 }
-            } else if (tab && isFirstPartyByEntity(request.url, tab.url, request)) {
+            } else if (tab && trackerutils.isFirstPartyByEntity(request.url, tab.url)) {
                 return { requestHeaders }
             }
             if (!cookieConfig.isExcluded(request.url)) {
@@ -802,6 +868,8 @@ chrome.alarms.onAlarm.addListener(alarmEvent => {
     } else if (alarmEvent.name === 'rotateSessionKey') {
         // TODO fix for manifest v3
         sessionKey = getHash()
+    } else if (alarmEvent.name === REFETCH_ALIAS_ALARM) {
+        fetchAlias()
     }
 })
 
@@ -819,7 +887,7 @@ const onStartup = () => {
         }
     })
 
-    settings.ready().then(() => {
+    settings.ready().then(async () => {
         experiment.setActiveExperiment()
 
         httpsStorage.getLists(constants.httpsLists)
@@ -835,6 +903,13 @@ const onStartup = () => {
         Companies.buildFromStorage()
 
         cookieConfig.updateCookieData()
+
+        // fetch alias if needed
+        const userData = settings.getSetting('userData')
+        if (userData && userData.token) {
+            if (!userData.nextAlias) await fetchAlias()
+            showContextMenuAction()
+        }
     })
 }
 

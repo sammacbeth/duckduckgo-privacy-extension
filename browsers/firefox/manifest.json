@@ -6,7 +6,7 @@
               "strict_min_version": "57.0"
         }
     },
-    "version": "2021.4.23",
+    "version": "2021.5.4",
     "description": "Privacy, simplified. Protect your data as you search and browse: tracker blocking, smarter encryption, private search, and more.",
     "icons": {
         "16": "img/icon_16.png",
@@ -42,8 +42,19 @@
         "matches": ["<all_urls>"],
         "all_frames": true,
         "css": ["public/css/noatb.css"],
-        "js": ["public/js/content-scripts/content-script-bundle.js", "public/js/inject.js"],
+        "js": ["public/js/inject.js"],
         "run_at": "document_start"
+      },
+      {
+        "js": [
+          "public/js/content-scripts/autofill.js"
+        ],
+        "css": [
+          "public/css/email-host-styles.css"
+        ],
+        "matches": ["<all_urls>"],
+        "all_frames": true,
+        "run_at": "document_idle"
       }
     ],
     "permissions": [
@@ -58,5 +69,9 @@
         "<all_urls>",
         "alarms"
     ],
-    "web_accessible_resources": ["/web_accessible_resources/*", "/public/font/*"]
+    "web_accessible_resources": [
+        "/web_accessible_resources/*",
+        "/public/css/email-autofill.css",
+        "/public/font/*"
+    ]
 }
