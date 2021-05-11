@@ -17,17 +17,17 @@ module.exports = function () {
     })}
         </li>
         <li class="site-info__li--https-status padded border--bottom">
-            <h2 class="site-info__https-status bold">
+            <p class="site-info__https-status bold">
                 <span class="site-info__https-status__icon
                     is-${this.model.httpsState}">
                 </span>
                 <span class="text-line-after-icon">
                     ${this.model.httpsStatusText}
                 </span>
-            </h2>
+            </p>
         </li>
         <li class="js-site-tracker-networks js-site-show-page-trackers site-info__li--trackers padded border--bottom">
-            <a href="javascript:void(0)" class="link-secondary bold">
+            <a href="javascript:void(0)" class="link-secondary bold" role="button">
                 ${renderTrackerNetworks(this.model)}
             </a>
         </li>
@@ -35,18 +35,18 @@ module.exports = function () {
             <span class="site-info__privacy-practices__icon
                 is-${tosdrMsg.toLowerCase()}">
             </span>
-            <a href="javascript:void(0)" class="link-secondary bold">
+            <a href="javascript:void(0)" class="link-secondary bold" role="button">
                 <span class="text-line-after-icon"> ${tosdrMsg} Privacy Practices </span>
                 <span class="icon icon__arrow pull-right"></span>
             </a>
         </li>
         <li class="site-info__li--toggle padded ${this.model.isWhitelisted ? '' : 'is-active'}">
-            <h2 class="is-transparent site-info__whitelist-status js-site-whitelist-status">
-                <span class="text-line-after-icon privacy-on-off-message">
+            <p class="is-transparent site-info__whitelist-status js-site-whitelist-status">
+                <span class="text-line-after-icon privacy-on-off-message bold">
                     ${setTransitionText(!this.model.isWhitelisted)}
                 </span>
-            </h2>
-            <h2 class="site-info__protection js-site-protection">Site Privacy Protection</h2>
+            </p>
+            <p class="site-info__protection js-site-protection bold">Site Privacy Protection</p>
             <div class="site-info__toggle-container">
                 ${toggleButton(!this.model.isWhitelisted, 'js-site-toggle pull-right')}
             </div>
