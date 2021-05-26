@@ -7,6 +7,8 @@ const audioButton = document.getElementById('audio')
 const tabId = chrome.devtools.inspectedWindow.tabId
 const port = chrome.runtime.connect()
 
+const cookieRowTemplate = document.getElementById('cookie-row')
+
 port.onMessage.addListener((message) => {
     const m = JSON.parse(message)
     if (m.tabId === tabId) {
@@ -47,6 +49,15 @@ port.onMessage.addListener((message) => {
             protectionButton.innerText = `Protection: ${tab.site?.whitelisted || tab.site?.isBroken ? 'OFF' : 'ON'}`
             canvasButton.innerText = `Canvas: ${tab.site?.brokenFeatures.includes('canvas') ? 'OFF' : 'ON'}`
             audioButton.innerText = `Audio: ${tab.site?.brokenFeatures.includes('audio') ? 'OFF' : 'ON'}`
+        } else if (m.action === 'cookie') {
+            const { action, kind, url } = m.message
+            const row = cookieRowTemplate.content.cloneNode(true)
+            const cells = row.querySelectorAll('td')
+            cells[1].textContent = action
+            cells[2].textContent = kind
+            cells[3].textContent = url
+            row.classList.add(kind)
+            table.appendChild(row)
         }
     }
 })
