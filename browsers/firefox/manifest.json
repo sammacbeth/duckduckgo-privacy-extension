@@ -74,5 +74,6 @@
         "/web_accessible_resources/*",
         "/public/css/autofill.css",
         "/public/font/*"
-    ]
+    ],
+    "devtools_page": "html/devtools-page.html"
 }

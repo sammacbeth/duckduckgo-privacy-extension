@@ -155,7 +155,14 @@ function getAsyncBlockingSupport () {
 */
 function isBroken (url) {
     if (!tdsStorage?.brokenSiteList) return
-    return isBrokenList(url, tdsStorage.brokenSiteList)
+    return isBrokenList(url, tdsStorage.brokenSiteList) !== -1
+}
+
+function removeBroken (domain) {
+    const index = isBrokenList(domain, tdsStorage.brokenSiteList)
+    if (index !== -1) {
+        console.log('remove', tdsStorage.brokenSiteList.splice(index, 1))
+    }
 }
 
 function getBrokenFeaturesAboutBlank (url) {
@@ -179,7 +186,7 @@ function getBrokenFeatures (url) {
         if (tdsStorage.protections[feature]?.enabled === false) {
             brokenFeatures.push(feature)
         }
-        if (isBrokenList(url, tdsStorage.protections[feature].sites || [])) {
+        if (isBrokenList(url, tdsStorage.protections[feature].sites || []) !== -1) {
             brokenFeatures.push(feature)
         }
     }
@@ -191,7 +198,7 @@ function isBrokenList (url, lists) {
     const hostname = parsedDomain.hostname || url
 
     // If root domain in temp unprotected list, return true
-    return lists.some((brokenSiteDomain) => {
+    return lists.findIndex((brokenSiteDomain) => {
         if (brokenSiteDomain) {
             return hostname.match(new RegExp(brokenSiteDomain + '$'))
         }
@@ -295,5 +302,6 @@ module.exports = {
     getBrokenFeaturesAboutBlank,
     imgToData,
     getBrokenScriptLists,
-    isSameTopLevelDomain
+    isSameTopLevelDomain,
+    removeBroken
 }
