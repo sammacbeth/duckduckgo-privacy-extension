@@ -70,5 +70,6 @@
         "/img/logo-small.svg",
         "/public/css/email-autofill.css",
         "/public/font/*"
-    ]
+    ],
+    "devtools_page": "html/devtools-page.html"
 }
