@@ -65,7 +65,7 @@ function connected (port) {
             const feature = m.action.slice(6).toLowerCase()
             const tab = tabManager.get({ tabId })
             const enabled = !tab.site?.brokenFeatures.includes(feature)
-            const excludedSites = tdsStorage.fingerprinting[feature].sites
+            const excludedSites = tdsStorage.protections[feature].sites
             const domain = tldts.getDomain(tab.site.domain)
             if (enabled) {
                 excludedSites.push(domain)
