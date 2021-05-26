@@ -246,6 +246,12 @@ chrome.webRequest.onHeadersReceived.addListener(
             }
             if (!cookieConfig.isExcluded(request.url)) {
                 responseHeaders = responseHeaders.filter(header => header.name.toLowerCase() !== 'set-cookie')
+                devtools.postMessage(request.tabId, 'cookie', {
+                    action: 'block',
+                    kind: 'set-cookie',
+                    url: request.url,
+                    siteUrl: tab.site?.url
+                })
             }
         }
 
@@ -759,6 +765,12 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
             }
             if (!cookieConfig.isExcluded(request.url)) {
                 requestHeaders = requestHeaders.filter(header => header.name.toLowerCase() !== 'cookie')
+                devtools.postMessage(request.tabId, 'cookie', {
+                    action: 'block',
+                    kind: 'cookie',
+                    url: request.url,
+                    siteUrl: tab.site?.url
+                })
             }
         }
 
