@@ -4,19 +4,19 @@ const refreshButton = document.getElementById('refresh')
 const protectionButton = document.getElementById('protection')
 const canvasButton = document.getElementById('canvas')
 const audioButton = document.getElementById('audio')
-const tabId = chrome.devtools.inspectedWindow.tabId
-const port = chrome.runtime.connect()
+const tabPicker = document.getElementById('tab-picker')
 
-const cookieRowTemplate = document.getElementById('cookie-row')
+let tabId = chrome.devtools?.inspectedWindow?.tabId
+const port = chrome.runtime.connect()
 
 port.onMessage.addListener((message) => {
     const m = JSON.parse(message)
     if (m.tabId === tabId) {
         if (m.action === 'tracker') {
             const { tracker, url, requestData, siteUrl } = m.message
-            const row = document.createElement('tr')
-            const exceptionCell = document.createElement('td')
-            const toggleLink = document.createElement('a')
+            const row = document.getElementById('request-row').content.firstElementChild.cloneNode(true)
+            const cells = row.querySelectorAll('td')
+            const toggleLink = row.querySelector('.block-toggle')
             toggleLink.href = ''
             if (tracker.action === 'block') {
                 toggleLink.innerText = 'I'
@@ -34,13 +34,9 @@ port.onMessage.addListener((message) => {
                 })
                 row.classList.remove(tracker.action)
                 row.classList.add(toggleLink.innerText === 'I' ? 'ignore' : 'block')
-            })
-            exceptionCell.appendChild(toggleLink)
-            row.appendChild(exceptionCell);
-            [tracker.action, tracker.reason, tracker.fullTrackerDomain, tracker.matchedRule || '', tracker.matchedRuleException, url].forEach((text) => {
-                const cell = document.createElement('td')
-                cell.innerText = text
-                row.appendChild(cell)
+            });
+            [tracker.action, tracker.reason, tracker.fullTrackerDomain, tracker.matchedRule || '', tracker.matchedRuleException, url].forEach((text, i) => {
+                cells[i + 1].innerText = text
             })
             row.classList.add(tracker.action)
             table.appendChild(row)
@@ -51,7 +47,7 @@ port.onMessage.addListener((message) => {
             audioButton.innerText = `Audio: ${tab.site?.brokenFeatures.includes('audio') ? 'OFF' : 'ON'}`
         } else if (m.action === 'cookie') {
             const { action, kind, url } = m.message
-            const row = cookieRowTemplate.content.cloneNode(true)
+            const row = document.getElementById('cookie-row').content.firstElementChild.cloneNode(true)
             const cells = row.querySelectorAll('td')
             cells[1].textContent = action
             cells[2].textContent = kind
@@ -61,7 +57,27 @@ port.onMessage.addListener((message) => {
         }
     }
 })
-port.postMessage({ action: 'setTab', tabId })
+
+if (!chrome.devtools) {
+    chrome.tabs.query({}, (tabs) => {
+        tabs.forEach((tab) => {
+            if (tab.url.startsWith('http')) {
+                const elem = document.createElement('option')
+                elem.value = tab.id
+                elem.innerText = tab.title
+                tabPicker.appendChild(elem)
+            }
+        })
+    })
+    tabPicker.addEventListener('change', () => {
+        tabId = parseInt(tabPicker.selectedOptions[0].value)
+        clear()
+        port.postMessage({ action: 'setTab', tabId })
+    })
+} else {
+    tabPicker.hidden = true
+    port.postMessage({ action: 'setTab', tabId })
+}
 
 function clear () {
     while (table.lastChild) {
