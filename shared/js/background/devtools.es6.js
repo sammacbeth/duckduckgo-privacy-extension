@@ -60,7 +60,7 @@ function connected (port) {
                 })
             }
             postMessage(tabId, 'tabChange', tab)
-        } else if (m.action === 'toggleCanvas' || m.action === 'toggleAudio') {
+        } else if (m.action.startsWith('toggle')) {
             const { tabId } = m
             const feature = m.action.slice(6).toLowerCase()
             const tab = tabManager.get({ tabId })
