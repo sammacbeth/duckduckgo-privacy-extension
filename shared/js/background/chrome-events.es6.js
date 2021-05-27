@@ -15,6 +15,7 @@ const constants = require('../../data/constants')
 const onboarding = require('./onboarding.es6')
 const cspProtection = require('./csp-blocking.es6')
 const browserName = utils.getBrowserName()
+const devtools = require('./devtools.es6')
 
 const sha1 = require('../shared-utils/sha1')
 
@@ -245,6 +246,12 @@ chrome.webRequest.onHeadersReceived.addListener(
             }
             if (!cookieConfig.isExcluded(request.url)) {
                 responseHeaders = responseHeaders.filter(header => header.name.toLowerCase() !== 'set-cookie')
+                devtools.postMessage(request.tabId, 'cookie', {
+                    action: 'block',
+                    kind: 'set-cookie',
+                    url: request.url,
+                    siteUrl: tab.site?.url
+                })
             }
         }
 
@@ -274,6 +281,7 @@ chrome.webNavigation.onCommitted.addListener(details => {
     if (!tab) return
 
     tab.updateSite(details.url)
+    devtools.postMessage(details.tabId, 'tabChange', tab)
 })
 
 /**
@@ -615,7 +623,8 @@ function getArgumentsObject (tabId, sender, documentUrl) {
     if (chrome.runtime.lastError) { // Prevent thrown errors when the frame disappears
         return null
     }
-    const site = tab?.site || {}
+    // Clone site so we don't retain any site changes
+    const site = Object.assign({}, tab?.site || {})
     const referrer = tab?.referrer || ''
 
     const cookie = {
@@ -624,6 +633,10 @@ function getArgumentsObject (tabId, sender, documentUrl) {
         tabRegisteredDomain: null,
         isTrackerFrame: false,
         policy: cookieConfig.firstPartyCookiePolicy
+    }
+    // Special case for iframes that are blank we check if it's also enabled
+    if (sender.url === 'about:blank') {
+        site.brokenFeatures = site.brokenFeatures.concat(utils.getBrokenFeaturesAboutBlank(tab.url))
     }
     if (!site.whitelisted && blockTrackingCookies()) {
         // determine the register domain of the sending tab
@@ -752,6 +765,12 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
             }
             if (!cookieConfig.isExcluded(request.url)) {
                 requestHeaders = requestHeaders.filter(header => header.name.toLowerCase() !== 'cookie')
+                devtools.postMessage(request.tabId, 'cookie', {
+                    action: 'block',
+                    kind: 'cookie',
+                    url: request.url,
+                    siteUrl: tab.site?.url
+                })
             }
         }
 
@@ -772,7 +791,7 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
 chrome.webRequest.onBeforeRedirect.addListener(
     details => {
         const tab = tabManager.get({ tabId: details.tabId })
-        if (tab && !tab.site.isBroken && !tab.site.whitelisted && details.responseHeaders && trackerutils.facebookExperimentIsActive()) {
+        if (tab && !tab.site.isBroken && !tab.site.whitelisted && details.responseHeaders && trackerutils.clickToLoadIsActive()) {
             // Detect cors error
             const headers = details.responseHeaders
             const corsHeaders = [
@@ -807,7 +826,7 @@ chrome.webNavigation.onCommitted.addListener(details => {
         return
     }
 
-    if (tab && !tab.site.whitelisted && trackerutils.facebookExperimentIsActive()) {
+    if (tab && !tab.site.whitelisted && trackerutils.clickToLoadIsActive()) {
         chrome.tabs.executeScript(details.tabId, {
             file: 'public/js/content-scripts/click-to-load.js',
             matchAboutBlank: true,
@@ -943,6 +962,7 @@ chrome.webRequest.onErrorOccurred.addListener(e => {
 if (browserName === 'moz') {
     cspProtection.init()
 }
+devtools.init()
 
 module.exports = {
     onStartup: onStartup

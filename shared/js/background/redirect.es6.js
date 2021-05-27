@@ -9,6 +9,7 @@ const tabManager = require('./tab-manager.es6')
 const ATB = require('./atb.es6')
 const browserWrapper = require('./$BROWSER-wrapper.es6')
 const settings = require('./settings.es6')
+const devtools = require('./devtools.es6')
 const browser = utils.getBrowserName()
 
 const debugRequest = false
@@ -128,6 +129,22 @@ function handleRequest (requestData) {
             }
         }
 
+        if (tracker) {
+            const cleanUrl = new URL(requestData.url)
+            cleanUrl.search = ''
+            cleanUrl.hash = ''
+            // console.log('xxx', tracker);
+            devtools.postMessage(tabId, 'tracker', {
+                tracker: {
+                    ...tracker,
+                    matchedRule: tracker.matchedRule?.rule.toString()
+                },
+                url: cleanUrl,
+                requestData,
+                siteUrl: thisTab.site.url
+            })
+        }
+
         // allow embedded twitter content if user enabled this setting
         if (tracker && tracker.fullTrackerDomain === 'platform.twitter.com' && settings.getSetting('embeddedTweetsEnabled') === true) {
             tracker = null
@@ -152,19 +169,17 @@ function handleRequest (requestData) {
                 // record potential blocked trackers for this tab
                 thisTab.addToTrackers(tracker)
             }
-
             browserWrapper.notifyPopup({ updateTabData: true })
 
             // Block the request if the site is not whitelisted
             if (!thisTab.site.whitelisted && tracker.action.match(/block|redirect/)) {
-                if (sameDomain) thisTab.addOrUpdateTrackersBlocked(tracker)
-
                 // update badge icon for any requests that come in after
                 // the tab has finished loading
                 if (thisTab.status === 'complete') thisTab.updateBadgeIcon()
 
                 if (thisTab.statusCode === 200) {
                     Companies.add(tracker.tracker.owner)
+                    if (sameDomain) thisTab.addOrUpdateTrackersBlocked(tracker)
                 }
 
                 // for debugging specific requests. see test/tests/debugSite.js
@@ -277,4 +292,5 @@ function isSameDomainRequest (tab, req) {
         return true
     }
 }
+
 exports.handleRequest = handleRequest

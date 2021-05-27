@@ -15,10 +15,7 @@
     },
     "manifest_version": 2,
     "browser_action": {
-        "default_icon": {
-            "19": "img/icon_19.png",
-            "38": "img/icon_38.png"
-        },
+        "default_icon": "img/icon_48.png",
         "default_popup": "html/popup.html"
     },
     "omnibox": {"keyword": "ddg"},
@@ -40,6 +37,7 @@
     "content_scripts": [
       {
         "matches": ["<all_urls>"],
+        "match_about_blank": true,
         "all_frames": true,
         "css": ["public/css/noatb.css"],
         "js": ["public/js/inject.js"],
@@ -57,6 +55,9 @@
         "run_at": "document_idle"
       }
     ],
+    "options_ui": {
+        "page": "html/options.html"
+    },
     "permissions": [
         "contextMenus",
         "webRequest",
@@ -73,5 +74,6 @@
         "/web_accessible_resources/*",
         "/public/css/email-autofill.css",
         "/public/font/*"
-    ]
+    ],
+    "devtools_page": "html/devtools-page.html"
 }
