@@ -1,104 +1,139 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8">
-    <style type="text/css">
-      .block {
-        background-color: orangered
-      }
 
-      .redirect {
-        background-color: yellow;
-      }
+<head>
+  <meta charset="utf-8">
+  <style type="text/css">
+    @font-face {
+      font-family: 'DDG_ProximaNova';
+      src: url('../public/font/ProximaNova-Reg-webfont.woff') format('woff');
+      font-weight: normal;
+      font-style: normal;
+    }
 
-      table {
-        table-layout: fixed;
-        width: 100%;
-        border-collapse: collapse;
-        border: 1px solid black;
-      }
+    @font-face {
+      font-family: 'DDG_ProximaNova';
+      src: url('../public/font/ProximaNova-Sbold-webfont.woff') format('woff');
+      font-weight: 600;
+      font-style: bold;
+    }
 
-      thead th:nth-child(1) {
-        width: 2%;
-      }
+    body {
+      font-family: 'DDG_ProximaNova';
+      color: #000
+    }
 
-      thead th:nth-child(2) {
-        width: 5%;
-      }
+    .block {
+      background-color: #DE5833;
+    }
 
-      thead th:nth-child(3) {
-        width: 13%;
-      }
+    .redirect {
+      background-color: #FDD20A;
+    }
 
-      thead th:nth-child(4) {
-        width: 12%;
-      }
+    .ignore {
+      background-color: #CACACA;
+    }
 
-      thead th:nth-child(5) {
-        width: 20%;
-      }
+    .cookie {
+      background-color: #9CB8FF
+    }
 
-      thead th:nth-child(6) {
-        width: 5%;
-      }
-      thead th:nth-child(7) {
-        width: 43%;
-      }
+    .set-cookie {
+      background-color: #BDA8FC
+    }
 
-      th, td {
-        padding: 5px;
-        white-space: nowrap;
-      }
-    </style>
-  </head>
-  <body>
-    <template id="cookie-row">
+
+    table {
+      table-layout: fixed;
+      width: 100%;
+      border-collapse: collapse;
+      border: 1px solid black;
+    }
+
+    thead th:nth-child(1) {
+      width: 2%;
+    }
+
+    thead th:nth-child(2) {
+      width: 5%;
+    }
+
+    thead th:nth-child(3) {
+      width: 13%;
+    }
+
+    thead th:nth-child(4) {
+      width: 12%;
+    }
+
+    thead th:nth-child(5) {
+      width: 20%;
+    }
+
+    thead th:nth-child(6) {
+      width: 5%;
+    }
+
+    thead th:nth-child(7) {
+      width: 43%;
+    }
+
+    th,
+    td {
+      padding: 5px;
+      white-space: nowrap;
+    }
+  </style>
+</head>
+
+<body>
+  <template id="cookie-row">
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td colspan=4></td>
+    </tr>
+  </template>
+
+  <template id="request-row">
+    <tr>
+      <td><a href="" class="block-toggle">I</a></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+  </template>
+
+  <div class="header">
+    <select id="tab-picker">
+      <option value="">--Select Tab--</option>
+    </select>
+    <button id="clear">Clear</button>
+    <button id="refresh">Refresh page</button>
+    <span>|</span>
+    <button id="protection">Protection: ??</button>
+  </div>
+  <table>
+    <thead>
       <tr>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td colspan=4></td>
+        <th></th>
+        <th>Action</th>
+        <th>Reason</th>
+        <th>Domain</th>
+        <th>Rule</th>
+        <th>Exception</th>
+        <th>URL</th>
       </tr>
-    </template>
+    </thead>
+    <tbody id="request-table"></tbody>
+  </table>
 
-    <template id="request-row">
-      <tr>
-        <td><a href="" class="block-toggle">I</a></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-      </tr>
-    </template>
+  <script src="/public/js/devtools-panel.js"></script>
+</body>
 
-    <div class="header">
-        <select id="tab-picker">
-          <option value="">--Select Tab--</option>
-        </select>
-        <button id="clear">Clear</button>
-        <button id="refresh">Refresh page</button>
-        <span>|</span>
-        <button id="protection">Protection: ??</button>
-        <button id="canvas">Canvas: ??</button>
-        <button id="audio">Audio: ??</button>
-    </div>
-    <table>
-      <thead>
-        <tr>
-            <th></th>
-            <th>Action</th>
-            <th>Reason</th>
-            <th>Domain</th>
-            <th>Rule</th>
-            <th>Exception</th>
-            <th>URL</th>
-        </tr>
-      </thead>
-      <tbody id="request-table"></tbody>
-    </table>
-
-    <script src="/public/js/devtools-panel.js"></script>
-  </body>
 </html>
