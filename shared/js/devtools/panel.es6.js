@@ -2,12 +2,17 @@ const table = document.querySelector('#request-table')
 const clearButton = document.getElementById('clear')
 const refreshButton = document.getElementById('refresh')
 const protectionButton = document.getElementById('protection')
-const canvasButton = document.getElementById('canvas')
-const audioButton = document.getElementById('audio')
 const tabPicker = document.getElementById('tab-picker')
 
 let tabId = chrome.devtools?.inspectedWindow?.tabId
 const port = chrome.runtime.connect()
+const features = [
+    'canvas',
+    'audio',
+    'referrer',
+    'floc',
+    'autofill'
+]
 
 port.onMessage.addListener((message) => {
     const m = JSON.parse(message)
@@ -43,15 +48,19 @@ port.onMessage.addListener((message) => {
         } else if (m.action === 'tabChange') {
             const tab = m.message
             protectionButton.innerText = `Protection: ${tab.site?.whitelisted || tab.site?.isBroken ? 'OFF' : 'ON'}`
-            canvasButton.innerText = `Canvas: ${tab.site?.brokenFeatures.includes('canvas') ? 'OFF' : 'ON'}`
-            audioButton.innerText = `Audio: ${tab.site?.brokenFeatures.includes('audio') ? 'OFF' : 'ON'}`
+            features.forEach((feature) => {
+                document.getElementById(feature).innerText =`${feature}: ${tab.site?.brokenFeatures.includes(feature) ? 'OFF' : 'ON'}`
+            })
         } else if (m.action === 'cookie') {
             const { action, kind, url } = m.message
             const row = document.getElementById('cookie-row').content.firstElementChild.cloneNode(true)
             const cells = row.querySelectorAll('td')
+            const cleanUrl = new URL(url)
+            cleanUrl.search = ''
+            cleanUrl.hash = ''
             cells[1].textContent = action
             cells[2].textContent = kind
-            cells[3].textContent = url
+            cells[3].textContent = cleanUrl.href
             row.classList.add(kind)
             table.appendChild(row)
         }
@@ -89,7 +98,11 @@ function clear () {
 clearButton.addEventListener('click', clear)
 refreshButton.addEventListener('click', () => {
     clear()
-    chrome.devtools.inspectedWindow.eval('window.location.reload();')
+    if (chrome.devtools) {
+        chrome.devtools.inspectedWindow.eval('window.location.reload();')
+    } else {
+        chrome.tabs.reload(tabId)
+    }
 })
 protectionButton.addEventListener('click', () => {
     port.postMessage({
@@ -97,15 +110,16 @@ protectionButton.addEventListener('click', () => {
         tabId
     })
 })
-canvasButton.addEventListener('click', () => {
-    port.postMessage({
-        action: 'toggleCanvas',
-        tabId
-    })
-})
-audioButton.addEventListener('click', () => {
-    port.postMessage({
-        action: 'toggleAudio',
-        tabId
+
+features.forEach((feature) => {
+    const btn = document.createElement('button')
+    btn.id = feature
+    btn.innerText = `${feature}: ???`
+    document.querySelector('.header').appendChild(btn)
+    btn.addEventListener('click', () => {
+        port.postMessage({
+            action: `toggle${feature}`,
+            tabId
+        })
     })
 })
