@@ -4,6 +4,8 @@ const refreshButton = document.getElementById('refresh')
 const protectionButton = document.getElementById('protection')
 const canvasButton = document.getElementById('canvas')
 const audioButton = document.getElementById('audio')
+const tdsOption = document.getElementById('tds')
+
 const tabId = chrome.devtools.inspectedWindow.tabId
 const port = chrome.runtime.connect()
 
@@ -80,5 +82,11 @@ audioButton.addEventListener('click', () => {
     port.postMessage({
         action: 'toggleAudio',
         tabId
+    })
+})
+tdsOption.addEventListener('change', (e) => {
+    port.postMessage({
+        action: 'reloadTDS',
+        tds: tdsOption.value
     })
 })

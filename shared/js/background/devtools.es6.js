@@ -4,6 +4,7 @@ const tabManager = require('./tab-manager.es6')
 const trackers = require('./trackers.es6')
 const tdsStorage = require('./storage/tds.es6')
 const { removeBroken } = require('./utils.es6')
+const load = require('./load.es6')
 
 const ports = new Map()
 
@@ -72,6 +73,21 @@ function connected (port) {
             } else {
                 excludedSites.splice(excludedSites.indexOf(domain, 1))
             }
+        } else if (m.action === 'reloadTDS') {
+            let tdsUrl = 'https://staticcdn.duckduckgo.com/trackerblocking/'
+            if (m.tds === 'live') {
+                tdsUrl += 'v2.1/tds.json'
+            } else if (m.tds === 'next') {
+                tdsUrl += 'v2.1/tds-next.json'
+            } else if (m.tds === 'beta') {
+                tdsUrl += 'beta/tds.json'
+            }
+            // fetch data and update tds
+            load.loadExtensionFile({ url: tdsUrl, etag: 'nope', returnType: 'json', source: 'external', timeout: 60000 }).then(res => {
+                if (res && res.status === 200) {
+                    trackers.setLists([{"name": "tds", "data": res.data}])
+                }
+            })
         }
     })
     port.onDisconnect.addListener(() => {
