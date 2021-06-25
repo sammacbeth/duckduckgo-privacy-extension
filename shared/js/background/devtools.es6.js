@@ -18,6 +18,7 @@ function connected (port) {
             tabId = m.tabId
             ports.set(tabId, port)
             const tab = tabManager.get({ tabId })
+            console.log('setTab', tab)
             postMessage(tabId, 'tabChange', tab)
         } else if (m.action === 'I' || m.action === 'B') {
             const { requestData, siteUrl, tracker } = m
@@ -26,6 +27,7 @@ function connected (port) {
                 // find the rule for this url
                 const ruleIndex = matchedTracker.tracker.rules.findIndex((r) => r.rule.toString() === tracker.matchedRule)
                 const rule = matchedTracker.tracker.rules[ruleIndex]
+                const parsedHost = tldts.parse(siteUrl)
                 if (!rule.exceptions) {
                     rule.exceptions = {}
                 }
@@ -35,11 +37,14 @@ function connected (port) {
                 if (m.action === 'B' && matchedTracker.action === 'redirect') {
                     matchedTracker.tracker.rules.splice(ruleIndex, 1)
                 } else if (m.action === 'I') {
-                    rule.exceptions.domains.push(new URL(siteUrl).hostname)
+                    rule.exceptions.domains.push(parsedHost.domain)
+                    if (!rule.exceptions.types?.includes(requestData.type)) {
+                        rule.exceptions.types.push(requestData.type)
+                    }
                 } else {
-                    let index = rule.exceptions.domains.indexOf(new URL(siteUrl).hostname)
+                    let index = rule.exceptions.domains.indexOf(parsedHost.domain)
                     if (index === -1) {
-                        index = rule.exceptions.domains.indexOf(tldts.parse(siteUrl).domain)
+                        index = rule.exceptions.domains.indexOf(parsedHost.hostname)
                     }
                     rule.exceptions.domains.splice(index, 1)
                 }
@@ -50,8 +55,10 @@ function connected (port) {
         } else if (m.action === 'toggleProtection') {
             const { tabId } = m
             const tab = tabManager.get({ tabId })
+            console.log('xxx', tab)
             if (tab.site?.isBroken) {
                 removeBroken(tab.site.domain)
+                removeBroken(new URL(tab.url).hostname)
             } else {
                 tabManager.whitelistDomain({
                     list: 'whitelisted',
