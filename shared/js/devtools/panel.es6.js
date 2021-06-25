@@ -49,7 +49,7 @@ port.onMessage.addListener((message) => {
             const tab = m.message
             protectionButton.innerText = `Protection: ${tab.site?.whitelisted || tab.site?.isBroken ? 'OFF' : 'ON'}`
             features.forEach((feature) => {
-                document.getElementById(feature).innerText =`${feature}: ${tab.site?.brokenFeatures.includes(feature) ? 'OFF' : 'ON'}`
+                document.getElementById(feature).innerText = `${feature}: ${tab.site?.brokenFeatures.includes(feature) ? 'OFF' : 'ON'}`
             })
         } else if (m.action === 'cookie') {
             const { action, kind, url } = m.message
