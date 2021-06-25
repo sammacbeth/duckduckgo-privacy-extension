@@ -1,8 +1,8 @@
 name: Publish Beta
 
 on:
-  release:
-    types: [ prereleased ]
+  push:
+    branches: [ devtools-beta ]
 
 jobs:
   firefox:
@@ -31,6 +31,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         prerelease: true
+        target_commitish: ${{ env.GITHUB_SHA }}
         tag_name: ${{ env.VERSION }}
         files: |
           ./build/firefox/release/web-ext-artifacts/*.xpi
@@ -70,6 +71,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         prerelease: true
+        target_commitish: ${{ env.GITHUB_SHA }}
         tag_name: ${{ env.VERSION }}
         files: |
           ./build/chrome/release/*.zip
