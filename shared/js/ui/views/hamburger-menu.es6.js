@@ -21,7 +21,8 @@ HamburgerMenu.prototype = window.$.extend({},
                 'close',
                 'options-link',
                 'feedback-link',
-                'broken-site-link'
+                'broken-site-link',
+                'debugger-panel-link'
             ])
             this.bindEvents([
                 [this.$close, 'click', this._closeMenu],
@@ -29,7 +30,8 @@ HamburgerMenu.prototype = window.$.extend({},
                 [this.$feedbacklink, 'click', this._handleFeedbackClick],
                 [this.$brokensitelink, 'click', this._handleBrokenSiteClick],
                 [this.model.store.subscribe, 'action:search', this._handleAction],
-                [this.model.store.subscribe, 'change:site', this._handleSiteUpdate]
+                [this.model.store.subscribe, 'change:site', this._handleSiteUpdate],
+                [this.$debuggerpanellink, 'click', this._handleDebuggerClick]
             ])
         },
 
@@ -64,6 +66,15 @@ HamburgerMenu.prototype = window.$.extend({},
                 this._rerender()
                 this._setup()
             }
+        },
+
+        _handleDebuggerClick: function (e) {
+            e.preventDefault()
+
+            chrome.windows.create({
+                type: 'panel',
+                url: chrome.runtime.getURL('/html/devtools-panel.html')
+            })
         }
     }
 )
