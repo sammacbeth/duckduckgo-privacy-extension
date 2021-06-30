@@ -234,7 +234,8 @@ chrome.webRequest.onHeadersReceived.addListener(
                     action: 'block',
                     kind: 'set-cookie',
                     url: request.url,
-                    siteUrl: tab.site?.url
+                    siteUrl: tab.site?.url,
+                    requestId: request.requestId
                 })
             }
         }
@@ -753,7 +754,8 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
                     action: 'block',
                     kind: 'cookie',
                     url: request.url,
-                    siteUrl: tab.site?.url
+                    siteUrl: tab.site?.url,
+                    requestId: request.requestId
                 })
             }
         }

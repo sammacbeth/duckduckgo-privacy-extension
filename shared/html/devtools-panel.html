@@ -57,33 +57,31 @@
     }
 
     thead th:nth-child(2) {
-      width: 5%;
+      width: 48%;
     }
 
     thead th:nth-child(3) {
-      width: 13%;
+      width: 18%;
     }
 
     thead th:nth-child(4) {
-      width: 12%;
-    }
-
-    thead th:nth-child(5) {
-      width: 20%;
-    }
-
-    thead th:nth-child(6) {
-      width: 5%;
-    }
-
-    thead th:nth-child(7) {
-      width: 43%;
+      width: 32%;
     }
 
     th,
     td {
       padding: 5px;
       white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+
+    tr > td:nth-child(4) {
+      overflow: visible;
+    }
+
+    #tab-picker {
+      width: 300px;
     }
   </style>
 </head>
@@ -94,7 +92,7 @@
       <td></td>
       <td></td>
       <td></td>
-      <td colspan=4></td>
+      <td></td>
     </tr>
   </template>
 
@@ -104,13 +102,11 @@
       <td></td>
       <td></td>
       <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
     </tr>
   </template>
 
   <div class="header">
+    <a href="./list-editor.html">🗒</a>
     <select id="tab-picker">
       <option value="">--Select Tab--</option>
     </select>
@@ -123,12 +119,9 @@
     <thead>
       <tr>
         <th></th>
-        <th>Action</th>
-        <th>Reason</th>
-        <th>Domain</th>
-        <th>Rule</th>
-        <th>Exception</th>
         <th>URL</th>
+        <th>Action</th>
+        <th>Domain</th>
       </tr>
     </thead>
     <tbody id="request-table"></tbody>
