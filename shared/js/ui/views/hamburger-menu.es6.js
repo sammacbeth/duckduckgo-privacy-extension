@@ -70,10 +70,12 @@ HamburgerMenu.prototype = window.$.extend({},
 
         _handleDebuggerClick: function (e) {
             e.preventDefault()
-
-            chrome.windows.create({
-                type: 'panel',
-                url: chrome.runtime.getURL('/html/devtools-panel.html')
+            chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+                const tabId = tabs.length > 0 ? tabs[0].id : ''
+                chrome.tabs.create({
+                    // type: 'panel',
+                    url: chrome.runtime.getURL(`/html/devtools-panel.html?tabId=${tabId}`)
+                })
             })
         }
     }
