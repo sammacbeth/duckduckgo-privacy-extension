@@ -40,7 +40,7 @@ port.onMessage.addListener((message) => {
                 row.classList.remove(tracker.action)
                 row.classList.add(toggleLink.innerText === 'I' ? 'ignore' : 'block')
             });
-            [tracker.action, tracker.reason, tracker.fullTrackerDomain, tracker.matchedRule || '', tracker.matchedRuleException, url].forEach((text, i) => {
+            [url, `${tracker.action} (${tracker.reason})`, tracker.fullTrackerDomain].forEach((text, i) => {
                 cells[i + 1].innerText = text
             })
             row.classList.add(tracker.action)
@@ -52,32 +52,57 @@ port.onMessage.addListener((message) => {
                 document.getElementById(feature).innerText = `${feature}: ${tab.site?.brokenFeatures.includes(feature) ? 'OFF' : 'ON'}`
             })
         } else if (m.action === 'cookie') {
-            const { action, kind, url } = m.message
-            const row = document.getElementById('cookie-row').content.firstElementChild.cloneNode(true)
-            const cells = row.querySelectorAll('td')
-            const cleanUrl = new URL(url)
-            cleanUrl.search = ''
-            cleanUrl.hash = ''
-            cells[1].textContent = action
-            cells[2].textContent = kind
-            cells[3].textContent = cleanUrl.href
-            row.classList.add(kind)
-            table.appendChild(row)
+            const { action, kind, url, requestId } = m.message
+            const rowId = `request-${requestId}`
+            if (document.getElementById(rowId) !== null) {
+                const row = document.getElementById(rowId)
+                const cells = row.querySelectorAll('td')
+                row.classList.add(kind)
+                cells[3].textContent = `${cells[3].textContent}, ${kind}`
+            } else {
+                const row = document.getElementById('cookie-row').content.firstElementChild.cloneNode(true)
+                row.id = rowId
+                const cells = row.querySelectorAll('td')
+                const cleanUrl = new URL(url)
+                cleanUrl.search = ''
+                cleanUrl.hash = ''
+                cells[1].textContent = cleanUrl.href
+                cells[2].textContent = action
+                cells[3].textContent = kind
+                row.classList.add(kind)
+                table.appendChild(row)
+            }
         }
     }
 })
 
-if (!chrome.devtools) {
+
+function updateTabSelector () {
     chrome.tabs.query({}, (tabs) => {
+        while (tabPicker.firstChild !== null) {
+            tabPicker.removeChild(tabPicker.firstChild)
+        }
+        const selectTabOption = document.createElement('option')
+        selectTabOption.value = ''
+        selectTabOption.innerText = '--Select Tab--'
+        tabPicker.appendChild(selectTabOption)
         tabs.forEach((tab) => {
             if (tab.url.startsWith('http')) {
                 const elem = document.createElement('option')
                 elem.value = tab.id
                 elem.innerText = tab.title
+                if (tab.id === tabId) {
+                    elem.setAttribute('selected', true)
+                }
                 tabPicker.appendChild(elem)
             }
         })
     })
+}
+
+if (!chrome.devtools) {
+    updateTabSelector()
+    chrome.tabs.onUpdated.addListener(updateTabSelector)
     tabPicker.addEventListener('change', () => {
         tabId = parseInt(tabPicker.selectedOptions[0].value)
         clear()
