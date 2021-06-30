@@ -4,7 +4,7 @@ const refreshButton = document.getElementById('refresh')
 const protectionButton = document.getElementById('protection')
 const tabPicker = document.getElementById('tab-picker')
 
-let tabId = chrome.devtools?.inspectedWindow?.tabId
+let tabId = chrome.devtools?.inspectedWindow?.tabId || parseInt(0 + new URL(document.location.href).searchParams.get('tabId'))
 const port = chrome.runtime.connect()
 const features = [
     'canvas',
@@ -76,7 +76,6 @@ port.onMessage.addListener((message) => {
     }
 })
 
-
 function updateTabSelector () {
     chrome.tabs.query({}, (tabs) => {
         while (tabPicker.firstChild !== null) {
@@ -110,6 +109,9 @@ if (!chrome.devtools) {
     })
 } else {
     tabPicker.hidden = true
+}
+
+if (tabId) {
     port.postMessage({ action: 'setTab', tabId })
 }
 
