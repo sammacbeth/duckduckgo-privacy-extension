@@ -608,6 +608,36 @@ chrome.runtime.onMessage.addListener((req, sender, res) => {
         })
         hideContextMenuAction()
     }
+
+    if (req.getListContents) {
+        res({
+            data: tdsStorage[req.getListContents],
+            etag: settings.getSetting(`${req.getListContents}-etag`) || ''
+        })
+        return true
+    }
+
+    if (req.setListContents) {
+        const parsed = tdsStorage.parsedata(req.setListContents, req.value)
+        tdsStorage[req.setListContents] = parsed
+        trackers.setLists([{
+            name: req.setListContents,
+            data: parsed
+        }])
+        res()
+        return true
+    }
+
+    if (req.reloadList) {
+        const list = constants.tdsLists.find(l => l.name === req.reloadList)
+        if (list) {
+            tdsStorage.getList(list).then((list) => {
+                trackers.setLists([list])
+                res()
+            })
+        }
+        return true
+    }
 })
 
 /**
