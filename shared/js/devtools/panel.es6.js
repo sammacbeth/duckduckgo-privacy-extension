@@ -14,6 +14,12 @@ const features = [
     'autofill'
 ]
 
+const actionIcons = {
+    block: '🚫',
+    redirect: '➡️',
+    ignore: '⚠️',
+}
+
 port.onMessage.addListener((message) => {
     const m = JSON.parse(message)
     if (m.tabId === tabId) {
@@ -40,7 +46,7 @@ port.onMessage.addListener((message) => {
                 row.classList.remove(tracker.action)
                 row.classList.add(toggleLink.innerText === 'I' ? 'ignore' : 'block')
             });
-            [url, `${tracker.action} (${tracker.reason})`, tracker.fullTrackerDomain, requestData.type].forEach((text, i) => {
+            [url, `${actionIcons[tracker.action]} ${tracker.action} (${tracker.reason})`, tracker.fullTrackerDomain, requestData.type].forEach((text, i) => {
                 cells[i + 1].innerText = text
             })
             row.classList.add(tracker.action)
@@ -67,7 +73,7 @@ port.onMessage.addListener((message) => {
                 cleanUrl.search = ''
                 cleanUrl.hash = ''
                 cells[1].textContent = cleanUrl.href
-                cells[2].textContent = action
+                cells[2].textContent = `🍪 ${action}`
                 cells[3].textContent = kind
                 cells[4].textContent = type
                 row.classList.add(kind)
