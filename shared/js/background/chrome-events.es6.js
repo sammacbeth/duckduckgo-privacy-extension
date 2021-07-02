@@ -251,7 +251,8 @@ chrome.webRequest.onHeadersReceived.addListener(
                     kind: 'set-cookie',
                     url: request.url,
                     siteUrl: tab.site?.url,
-                    requestId: request.requestId
+                    requestId: request.requestId,
+                    type: request.type
                 })
             }
         }
@@ -611,13 +612,14 @@ chrome.runtime.onMessage.addListener((req, sender, res) => {
 
     if (req.getListContents) {
         res({
-            data: tdsStorage[req.getListContents],
+            data: tdsStorage.getSerialisableList(req.getListContents),
             etag: settings.getSetting(`${req.getListContents}-etag`) || ''
         })
         return true
     }
 
     if (req.setListContents) {
+        console.log('xxx', req.value)
         const parsed = tdsStorage.parsedata(req.setListContents, req.value)
         tdsStorage[req.setListContents] = parsed
         trackers.setLists([{
@@ -801,7 +803,8 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
                     kind: 'cookie',
                     url: request.url,
                     siteUrl: tab.site?.url,
-                    requestId: request.requestId
+                    requestId: request.requestId,
+                    type: request.type
                 })
             }
         }

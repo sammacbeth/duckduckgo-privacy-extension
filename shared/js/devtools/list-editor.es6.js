@@ -63,7 +63,6 @@ listEditor.addEventListener('keypress', () => {
         console.log('changed', getListFormat(selected))
         if (getListFormat(selected) === 'json') {
             try {
-                console.log('xxx', JSON.parse(listEditor.value))
                 saveButton.removeAttribute('disabled')
             } catch (e) {
                 console.log('parse error')
