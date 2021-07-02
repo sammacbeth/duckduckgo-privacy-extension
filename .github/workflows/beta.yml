@@ -26,7 +26,7 @@ jobs:
       run: |
         web-ext sign -s ./build/firefox/release/ -a ./build/firefox/release/web-ext-artifacts --api-key ${{ secrets.AMO_JWT_ISSUER }} --api-secret ${{ secrets.AMO_JWT_SECRET }}
     - name: Release
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@9729932bfb75c05ad1f6e3a729294e05abaa7001
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
@@ -66,7 +66,7 @@ jobs:
     - name: Check version
       run: echo "VERSION=$(jq -r .version ./build/chrome/release/manifest.json)" >> $GITHUB_ENV
     - name: Release
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@9729932bfb75c05ad1f6e3a729294e05abaa7001
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
