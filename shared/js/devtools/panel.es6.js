@@ -40,7 +40,7 @@ port.onMessage.addListener((message) => {
                 row.classList.remove(tracker.action)
                 row.classList.add(toggleLink.innerText === 'I' ? 'ignore' : 'block')
             });
-            [url, `${tracker.action} (${tracker.reason})`, tracker.fullTrackerDomain].forEach((text, i) => {
+            [url, `${tracker.action} (${tracker.reason})`, tracker.fullTrackerDomain, requestData.type].forEach((text, i) => {
                 cells[i + 1].innerText = text
             })
             row.classList.add(tracker.action)
@@ -52,7 +52,7 @@ port.onMessage.addListener((message) => {
                 document.getElementById(feature).innerText = `${feature}: ${tab.site?.brokenFeatures.includes(feature) ? 'OFF' : 'ON'}`
             })
         } else if (m.action === 'cookie') {
-            const { action, kind, url, requestId } = m.message
+            const { action, kind, url, requestId, type } = m.message
             const rowId = `request-${requestId}`
             if (document.getElementById(rowId) !== null) {
                 const row = document.getElementById(rowId)
@@ -69,6 +69,7 @@ port.onMessage.addListener((message) => {
                 cells[1].textContent = cleanUrl.href
                 cells[2].textContent = action
                 cells[3].textContent = kind
+                cells[4].textContent = type
                 row.classList.add(kind)
                 table.appendChild(row)
             }

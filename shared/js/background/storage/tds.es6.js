@@ -146,5 +146,27 @@ class TDSStorage {
 
         return versionParam
     }
+
+    /**
+     * Convert the given list into stringified form.
+     * @param {*} name 
+     * @returns list in a fully serialisable format
+     */
+    getSerialisableList (name) {
+        if (name === 'tds') {
+            // copy and convert regexes to string
+            const listCopy = JSON.parse(JSON.stringify(this.tds))
+            Object.values(listCopy.trackers).forEach((tracker) => {
+                tracker.rules?.forEach((rule, i) => {
+                    // convert Regex to string and cut slashes and flags
+                    const ruleRegexStr = this.tds.trackers[tracker.domain].rules[i].rule.toString()
+                    rule.rule = ruleRegexStr.slice(1, ruleRegexStr.length - 3)
+                })
+            })
+            return listCopy
+        } else {
+            return this[name]
+        }
+    }
 }
 module.exports = new TDSStorage()
