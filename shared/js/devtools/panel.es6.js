@@ -20,7 +20,7 @@ const features = [
 const actionIcons = {
     block: '🚫',
     redirect: '➡️',
-    ignore: '⚠️',
+    ignore: '⚠️'
 }
 
 port.onMessage.addListener((message) => {
