@@ -3,6 +3,7 @@ const clearButton = document.getElementById('clear')
 const refreshButton = document.getElementById('refresh')
 const protectionButton = document.getElementById('protection')
 const tabPicker = document.getElementById('tab-picker')
+const tdsOption = document.getElementById('tds')
 
 let tabId = chrome.devtools?.inspectedWindow?.tabId || parseInt(0 + new URL(document.location.href).searchParams.get('tabId'))
 const port = chrome.runtime.connect()
@@ -11,7 +12,9 @@ const features = [
     'audio',
     'referrer',
     'floc',
-    'autofill'
+    'autofill',
+    'cookie',
+    'gpc'
 ]
 
 const actionIcons = {
@@ -155,5 +158,24 @@ features.forEach((feature) => {
             action: `toggle${feature}`,
             tabId
         })
+    })
+})
+
+chrome.runtime.sendMessage({ getSetting: { name: 'tds-channel' } }, (result) => {
+    console.log('setting', result)
+    const active = tdsOption.querySelector(`[value=${result}`)
+    if (active) {
+        active.setAttribute('selected', true)
+    }
+})
+
+tdsOption.addEventListener('change', (e) => {
+    chrome.runtime.sendMessage({
+        updateSetting: {
+            name: 'tds-channel',
+            value: tdsOption.selectedOptions[0].value
+        }
+    }, () => {
+        chrome.runtime.sendMessage({ reloadList: 'tds' })
     })
 })
