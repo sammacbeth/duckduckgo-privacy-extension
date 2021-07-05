@@ -91,6 +91,11 @@
     #tab-picker {
       width: 300px;
     }
+
+    #table-filter > label {
+      margin-left: 5px;
+      padding: 1px;
+    }
   </style>
 </head>
 
@@ -130,6 +135,27 @@
       <option value="next">Next</option>
       <option value="beta">Beta</option>
     </select>
+  </div>
+  <div id="table-filter">
+    Display options:
+    <label class="block">
+      <input id="display-blocked" type="checkbox" checked><span>Blocked</span>
+   </label>
+   <label class="ignore">
+      <input id="display-ignore" type="checkbox" checked><span>Ignored</span>
+    </label>
+    <label class="redirect">
+      <input id="display-redirect" type="checkbox" checked><span>Redirected</span>
+    </label>
+    <label class="cookie">
+      <input id="display-cookie" type="checkbox" checked><span>HTTP Cookies</span>
+    </label>
+    <label class="jscookie">
+      <input id="display-jscookie" type="checkbox" checked><span>JS Cookies</span>
+    </label>
+    <label class="canvas">
+      <input id="display-canvas" type="checkbox" checked><span>Canvas API</span>
+    </label>
   </div>
   <table>
     <thead>

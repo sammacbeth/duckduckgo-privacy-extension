@@ -4,6 +4,7 @@ const refreshButton = document.getElementById('refresh')
 const protectionButton = document.getElementById('protection')
 const tabPicker = document.getElementById('tab-picker')
 const tdsOption = document.getElementById('tds')
+const displayFilters = document.querySelectorAll('#table-filter input')
 
 let tabId = chrome.devtools?.inspectedWindow?.tabId || parseInt(0 + new URL(document.location.href).searchParams.get('tabId'))
 const port = chrome.runtime.connect()
@@ -21,6 +22,15 @@ const actionIcons = {
     block: '🚫',
     redirect: '➡️',
     ignore: '⚠️'
+}
+
+function shouldShowRow (className) {
+    const filter = document.getElementById(`display-${className}`)
+    return !filter || filter.checked
+}
+
+function setRowVisible (row) {
+    row.hidden = !shouldShowRow(row.classList[0])
 }
 
 port.onMessage.addListener((message) => {
@@ -102,6 +112,7 @@ port.onMessage.addListener((message) => {
             row.classList.add('canvas')
             table.appendChild(row)
         }
+        setRowVisible(document.querySelector('tbody').lastChild)
     }
 })
 
@@ -196,5 +207,11 @@ tdsOption.addEventListener('change', (e) => {
         }
     }, () => {
         chrome.runtime.sendMessage({ reloadList: 'tds' })
+    })
+})
+
+displayFilters.forEach((input) => {
+    input.addEventListener('change', () => {
+        document.querySelectorAll('tr').forEach(setRowVisible)
     })
 })
