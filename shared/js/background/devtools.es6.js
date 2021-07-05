@@ -94,7 +94,12 @@ function postMessage (tabId, action, message) {
     }
 }
 
+function isActive (tabId) {
+    return ports.has(tabId)
+}
+
 module.exports = {
     init,
-    postMessage
+    postMessage,
+    isActive,
 }

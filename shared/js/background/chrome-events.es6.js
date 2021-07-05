@@ -623,6 +623,11 @@ chrome.runtime.onMessage.addListener((req, sender, res) => {
         }
         return true
     }
+
+    if (req.debuggerMessage) {
+        devtools.postMessage(sender.tab?.id, req.debuggerMessage.action, req.debuggerMessage.message)
+        return true
+    }
 })
 
 /**
@@ -668,6 +673,7 @@ function getArgumentsObject (tabId, sender, documentUrl) {
         cookie.shouldBlock = !cookieConfig.isExcluded(sender.url)
     }
     return {
+        debug: devtools.isActive(tabId),
         cookie,
         globalPrivacyControlValue: settings.getSetting('GPC'),
         stringExemptionLists: utils.getBrokenScriptLists(),

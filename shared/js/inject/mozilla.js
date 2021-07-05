@@ -12,6 +12,13 @@ function init () {
         if (!message) {
             return
         }
+        if (message.debug) {
+            window.addEventListener('message', (m) => {
+                chrome.runtime.sendMessage({
+                    debuggerMessage: m.data
+                })
+            })
+        }
         protections.initProtections(message)
     }
     )
