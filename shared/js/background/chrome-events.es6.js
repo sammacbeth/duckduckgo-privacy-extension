@@ -619,7 +619,6 @@ chrome.runtime.onMessage.addListener((req, sender, res) => {
     }
 
     if (req.setListContents) {
-        console.log('xxx', req.value)
         const parsed = tdsStorage.parsedata(req.setListContents, req.value)
         tdsStorage[req.setListContents] = parsed
         trackers.setLists([{

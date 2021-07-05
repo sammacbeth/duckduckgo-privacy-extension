@@ -25,10 +25,16 @@ class TDSStorage {
         const etag = settings.getSetting(`${listCopy.name}-etag`) || ''
         const version = this.getVersionParam()
         const activeExperiment = settings.getSetting('activeExperiment')
+        const channel = settings.getSetting(`${listCopy.name}-channel`) || ''
 
         let experiment = ''
         if (activeExperiment) {
             experiment = settings.getSetting('experimentData')
+        }
+
+        // select custom version of the list from the config
+        if (channel && listCopy.channels && listCopy.channels[channel]) {
+            listCopy.url = listCopy.channels[channel]
         }
 
         if (experiment && experiment.listName === listCopy.name) {
