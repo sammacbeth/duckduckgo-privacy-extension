@@ -31,7 +31,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         prerelease: true
-        target_commitish: ${{ env.GITHUB_SHA }}
+        target_commitish: ${{ github.sha }}
         tag_name: ${{ env.VERSION }}
         files: |
           ./build/firefox/release/web-ext-artifacts/*.xpi
@@ -71,7 +71,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         prerelease: true
-        target_commitish: ${{ env.GITHUB_SHA }}
+        target_commitish: ${{ github.sha }}
         tag_name: ${{ env.VERSION }}
         files: |
           ./build/chrome/release/*.zip
