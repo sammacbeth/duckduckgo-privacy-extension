@@ -92,6 +92,15 @@ port.onMessage.addListener((message) => {
             cells[4].textContent = value.split(';')[0]
             row.classList.add('jscookie')
             table.appendChild(row)
+        } else if (m.action === 'canvas') {
+            const { documentUrl, action, kind } = m.message
+            const row = document.getElementById('cookie-row').content.firstElementChild.cloneNode(true)
+            const cells = row.querySelectorAll('td')
+            cells[1].textContent = documentUrl
+            cells[2].textContent = `Canvas ${action}`
+            cells[3].textContent = kind
+            row.classList.add('canvas')
+            table.appendChild(row)
         }
     }
 })
