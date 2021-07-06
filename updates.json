@@ -89,6 +89,10 @@
         {
           "version": "2021.7.5",
           "update_link": "https://github.com/sammacbeth/duckduckgo-privacy-extension/releases/download/2021.7.5/duckduckgo_privacy_essentials-2021.7.5-an+fx.xpi"
+        },
+        {
+          "version": "2021.7.6",
+          "update_link": "https://github.com/sammacbeth/duckduckgo-privacy-extension/releases/download/2021.7.6/duckduckgo_privacy_essentials-2021.7.6-an+fx.xpi"
         }
       ]
     }
