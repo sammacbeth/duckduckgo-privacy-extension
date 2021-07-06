@@ -77,8 +77,7 @@ HamburgerMenu.prototype = window.$.extend({},
             e.preventDefault()
             chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
                 const tabId = tabs.length > 0 ? tabs[0].id : ''
-                chrome.windows.create({
-                    type: 'panel',
+                chrome.tabs.create({
                     url: chrome.runtime.getURL(`/html/devtools-panel.html?tabId=${tabId}`)
                 })
             })
