@@ -19,13 +19,6 @@ const devtools = require('./devtools.es6')
 
 const sha1 = require('../shared-utils/sha1')
 
-const RELEASE_EXTENSION_IDS = [
-    'caoacbimdbbljakfhgikoodekdnlcgpk', // edge store
-    'bkdgflcldnnnapblkhphbgpggdiikppg', // chrome store
-    'jid1-ZAdIEUB7XOzOJw@jetpack' // firefox
-]
-const IS_BETA = RELEASE_EXTENSION_IDS.indexOf(chrome.runtime.id) === -1 // eslint-disable-line no-unused-vars
-
 /**
  * Produce a random float, same output as Math.random()
  * @returns {float}

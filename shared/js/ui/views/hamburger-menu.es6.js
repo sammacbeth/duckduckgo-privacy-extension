@@ -1,6 +1,7 @@
 const Parent = window.DDG.base.View
 const openOptionsPage = require('./mixins/open-options-page.es6.js')
 const browserUIWrapper = require('./../base/$BROWSER-ui-wrapper.es6.js')
+const { IS_BETA } = require('../../background/channel.es6.js')
 
 function HamburgerMenu (ops) {
     this.model = ops.model
@@ -33,6 +34,10 @@ HamburgerMenu.prototype = window.$.extend({},
                 [this.model.store.subscribe, 'change:site', this._handleSiteUpdate],
                 [this.$debuggerpanellink, 'click', this._handleDebuggerClick]
             ])
+            if (IS_BETA) {
+                console.log(this.$('#debugger-panel'))
+                this.$('#debugger-panel').removeClass('is-hidden')
+            }
         },
 
         _handleAction: function (notification) {
